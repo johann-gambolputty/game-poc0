@@ -1,0 +1,38 @@
+﻿{
+  "atlasName":  "test",
+  "layers": [
+    {
+      "name": "Earth Layer",
+      "tiles": [
+        {
+          "name": "mudBlobs",
+          "baseTilePath": "http://www.piskelapp.com/p/agxzfnBpc2tlbC1hcHByEwsSBlBpc2tlbBiAgICo7oakCAw/sprite",
+          "__baseTilePath": "tile-mud-blobs-0.png"
+        },
+        {
+          "name": "rockBlobs",
+          "baseTilePath":  "http://www.piskelapp.com/p/agxzfnBpc2tlbC1hcHByEwsSBlBpc2tlbBiAgICI-8HbCww/sprite"
+        }
+      ]
+    },
+    {
+      "name": "Grass Layer",
+      "tiles": [
+        {
+          "name": "lushGrass",
+          "baseTilePath": "http://www.piskelapp.com/p/agxzfnBpc2tlbC1hcHByEwsSBlBpc2tlbBiAgICIg_HNCAw/sprite",
+          "edgeTransitions": [
+            {
+              "for": "Left",
+              "path": "http://www.piskelapp.com/p/agxzfnBpc2tlbC1hcHByEwsSBlBpc2tlbBiAgIDIroTpCAw/sprite"
+            },
+            {
+              "for": "Top",
+              "path": "http://www.piskelapp.com/p/agxzfnBpc2tlbC1hcHByEwsSBlBpc2tlbBiAgIDIuNPtCgw/sprite"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

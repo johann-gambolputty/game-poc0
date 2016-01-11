@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GamePoc0", "GamePoc0\GamePoc0.csproj", "{56A2FA3B-A730-4647-822B-F848E75EA23C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GamePoc0.Tests", "GamePoc0.Tests\GamePoc0.Tests.csproj", "{8ADAC92F-0D81-4102-8DDD-74412176463C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TileOpacityMaskGenerator", "TileOpacityMaskGenerator\TileOpacityMaskGenerator.csproj", "{77676B31-ABB7-4971-9900-636EDF35BB26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLib", "GameLib\GameLib.csproj", "{6F006358-07A3-4A49-96E6-38C448BE11EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TileAtlas", "TileAtlas\TileAtlas.csproj", "{323FBC6F-7E6C-4219-9CF0-173D251922EC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{56A2FA3B-A730-4647-822B-F848E75EA23C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56A2FA3B-A730-4647-822B-F848E75EA23C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56A2FA3B-A730-4647-822B-F848E75EA23C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56A2FA3B-A730-4647-822B-F848E75EA23C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8ADAC92F-0D81-4102-8DDD-74412176463C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8ADAC92F-0D81-4102-8DDD-74412176463C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8ADAC92F-0D81-4102-8DDD-74412176463C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8ADAC92F-0D81-4102-8DDD-74412176463C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77676B31-ABB7-4971-9900-636EDF35BB26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77676B31-ABB7-4971-9900-636EDF35BB26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77676B31-ABB7-4971-9900-636EDF35BB26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77676B31-ABB7-4971-9900-636EDF35BB26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F006358-07A3-4A49-96E6-38C448BE11EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F006358-07A3-4A49-96E6-38C448BE11EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F006358-07A3-4A49-96E6-38C448BE11EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F006358-07A3-4A49-96E6-38C448BE11EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{323FBC6F-7E6C-4219-9CF0-173D251922EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{323FBC6F-7E6C-4219-9CF0-173D251922EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{323FBC6F-7E6C-4219-9CF0-173D251922EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{323FBC6F-7E6C-4219-9CF0-173D251922EC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

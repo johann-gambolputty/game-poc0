@@ -1,0 +1,68 @@
+﻿<script src="~/Scripts/three.min.js"></script>
+<script src="~/Scripts/game/sprite.js"></script>
+<script src="~/Scripts/game/keys.js"></script>
+<script src="~/Scripts/game/controllers.js"></script>
+<script src="~/Scripts/game/entity.js"></script>
+<script src="Scripts/jquery.signalR-2.1.2.min.js"></script>
+<script src="signalr/hubs"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        var gameHub = $.connection.gameHub;
+
+        var testSprite = new sprite("test");
+
+        var personAnimator = buildSpriteAnimator()
+            .glueWalk("/Content/assets/images/test")
+            .glue(ANIM_ACTION_WAIT, new sprite("/Content/assets/images/test-s-walk.png", { frameCount: 1 }));
+
+        var player = new entity(100, 100, personAnimator, new playerControllerFactory());
+
+        var canvas = document.getElementById("mainCanvas");
+        canvas.width = document.getElementById("mainCanvasContainer").offsetWidth;
+        var context = canvas.getContext("2d");
+        var fill = context.createLinearGradient(0, 0, 0, canvas.height);
+        fill.addColorStop(0.0, '#004CB3');
+        fill.addColorStop(1.0, '#8ED6FF');
+        context.fillStyle = fill;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer();
+
+        var frameCounter = 0;
+
+
+        function drawScreen() {
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            //context.drawImage(background, 0, 0);
+            player.render(context);
+            //follower.render(context);
+            //var facing = Math.floor(frameCounter / 8) % 8; var frame = Math.floor(frameCounter / 4) % 4;
+            //reckorSprite.render(context, 2, frame, 50, 10);
+            //for (var i = 0; i < 20; ++i) {
+            //    testSprite.render(context, facing, frame, i * 20, i * 20);
+            //}
+            frameCounter++;
+        }
+
+        function gameLoop() {
+            window.setTimeout(gameLoop, 20);
+            drawScreen();
+        }
+        gameLoop();
+    });
+</script>
+<div class="jumbotron">
+    <h1>Game Proof Of Concept</h1>
+    <!--
+    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS, and JavaScript.</p>
+    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+    -->
+</div>
+<img src="~/Content/assets/images/test-s-walk.png"/>
+<div id="mainCanvasContainer">
+    <canvas id="mainCanvas" height="500" style="width:100%;height:500px;border:1px solid;border-color:black"></canvas>
+</div>
