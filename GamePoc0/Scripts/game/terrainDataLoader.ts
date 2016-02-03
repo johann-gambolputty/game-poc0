@@ -1,10 +1,82 @@
 ﻿
+interface IGroundTypePatch {
+    width: number;
+    height: number;
+    numberOfLayers: number;
+    supportsLayer(layer: number): boolean;
+    getGroundTypeAt(layer:number, x: number, y: number): number;
+}
 
-class TerrainGeometryData {
-    constructor(public geometry: any, private width: number, private height: number, private widthSamples: number, private heightSamples: number) {
+class LayerGroundTypePatchBuilder {
+    constructor(public width: number, public height: number, public layer: number, private data: Uint8Array) {
+    }
+    setGroundType(x: number, y: number, groundType: number) {
+        this.data[x + y * this.width] = groundType;
+    }
+}
+
+
+class GroundTypePatchBuilder {
+    private data: Array<Uint8Array>;
+    constructor(public width: number, public height: number) {
+    }
+    buildLayer(layer: number): LayerGroundTypePatchBuilder {
+        var layerData = new Uint8Array(this.width * this.height);
+        this.data.push(layerData);
+        return new LayerGroundTypePatchBuilder(this.width, this.height, layer, layerData);
+    }
+
+    build(): IGroundTypePatch {
+        throw "not implemented";
+    }
+}
+
+class GroundTypePatch implements IGroundTypePatch {
+    constructor(public width: number, public height: number, private groundTypeLayers: Array<Uint8Array>) {
+    }
+    supportsLayer(layer: number): boolean {
+        return this.groundTypeLayers[layer] != null;
+    }
+    get numberOfLayers(): number {
+        return this.groundTypeLayers.length;
+    }
+    getGroundTypeAt(layer: number, x: number, y: number): number {
+        return this.groundTypeLayers[layer][x + y * this.width];
+    }
+}
+
+class Point2d {
+    constructor(public x: number, public y: number) { }
+}
+
+class Quad2d {
+    constructor(public min: Point2d, public max: Point2d) { }
+}
+
+interface IGroundTypeUvLookup {
+    getUv(groundType: number): Quad2d;
+}
+
+class GroundTypeUvLookup implements IGroundTypeUvLookup {
+    constructor(private atlas: AtlasUvData) {
+    }
+
+    getUv(groundType: number): Quad2d {
+        return null;
+    }
+}
+
+interface ITerrainGeometryData {
+    groundHeight(ix: number, iy: number): number;
+    getY(x: number, z: number): number;
+}
+
+class TerrainGeometryData implements ITerrainGeometryData {
+
+    constructor(public geometry: any, private width: number, private height: number, private widthSamples: number, private heightSamples: number, private getHeight: (x: number, y: number) => number) {
     }
     groundHeight(ix: number, iy: number) : number {
-        return this.geometry.vertices[ix + iy * this.widthSamples].z;
+        return this.getHeight(ix, iy);
     }
     getY(x: number, z: number) : number {
         var ox = (x + this.width / 2) * (this.widthSamples / this.width);
@@ -29,26 +101,24 @@ class TerrainGeometryDataLoader implements ITerrainGeometryDataLoader {
     heightmapUrl: string;
     heightmapProcessor: (heightMapImage: HTMLImageElement) => TerrainGeometryData;
 
-    constructor(heightmapUrl: string, width: number, height: number, widthSamples: number, heightSamples: number) {
+    constructor(heightmapUrl: string, width: number, height: number, widthSamples: number, heightSamples: number, groundTypeUvLookup: IGroundTypeUvLookup) {
         this.heightmapUrl = heightmapUrl;
         this.heightmapProcessor = function (heightMapImage: HTMLImageElement): TerrainGeometryData {
             var canvas = document.createElement("canvas");
             var ctx = canvasImage(canvas, heightMapImage, widthSamples, heightSamples);
             var gd = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            var geometry = new THREE.PlaneGeometry(width, height, widthSamples - 1, heightSamples - 1);
-            for (var i = 0; i < geometry.vertices.length; i++) {
-                geometry.vertices[i].z = gd.data[i * 4] / 5;
-            }
-            var faceUvs = geometry.faceVertexUvs[0];
-            for (var i = 0; i < faceUvs.length; ++i) {
-                var face = faceUvs[i];
-                for (var j = 0; j < face.length; ++j) {
-                    face[j].y = 1.0 - face[j].y;
+            var heightData = new Float32Array(widthSamples * heightSamples);
+            var heightDataOffset = 0;
+            var imgOffset = 0;
+            for (var y = 0; y < heightSamples; ++y) {
+                for (var x = 0; x < widthSamples; ++x, ++heightDataOffset, imgOffset += 4) {
+                    heightData[heightDataOffset] = gd.data[imgOffset] / 5.0;
                 }
             }
-            geometry.computeFaceNormals();
+            //var geometry = new THREE.PlaneGeometry(width, height, widthSamples - 1, heightSamples - 1);
+            var geometry = new THREE.TerrainGeometry(width, height, widthSamples - 1, heightSamples - 1, (x, y) => heightData[x + y * widthSamples]);
             geometry.computeVertexNormals();
-            return new TerrainGeometryData(geometry, width, height, widthSamples, heightSamples);
+            return new TerrainGeometryData(geometry, width, height, widthSamples, heightSamples, (x, y) => heightData[x + y * widthSamples]);
         };
     }
 
@@ -73,6 +143,7 @@ class AtlasUvTileInfo {
 
 class AtlasUvTileSet {
     public name: string;
+    public typeId: number;
     public baseTileInfo: AtlasUvTileInfo;
     public cornerTransitionTileInfos: Array<AtlasUvTileInfo>;
     public edgeTransitionTileInfos: Array<AtlasUvTileInfo>;
@@ -286,7 +357,7 @@ interface ITerrainSceneBuilder {
 class TerrainSceneBuilder implements TerrainSceneBuilder {
     builder: (td: TerrainGeometryData, tl: TerrainLayerMapData, ta: TerrainAtlasData) => void;
     constructor(scene: any) {
-        this.builder = function (td: TerrainGeometryData, tl: TerrainLayerMapData) {
+        this.builder = function (td: TerrainGeometryData, tl: TerrainLayerMapData, ta: TerrainAtlasData) {
 
             //  Build the atlas texture
             var atlasTexture = new THREE.Texture(tl.atlasData.atlasImage);
@@ -297,6 +368,16 @@ class TerrainSceneBuilder implements TerrainSceneBuilder {
             atlasTexture.flipY = false;
             atlasTexture.needsUpdate = true;
 
+            ////  Build atlas UV lookup texture to make it easier to retrieve tile offsets
+            //var atlasUvLookupTextureData = new Uint8Array(4 * 256);
+            //for (var i = 0; i < ta.atlasUvData.
+
+            //var atlasUvLookupTexture = new THREE.DataTexture(atlasUvLookupTextureData, 256, 1, THREE.RGBAFormat);
+            //atlasUvLookupTexture.minFilter = THREE.NearestFilter;
+            //atlasUvLookupTexture.magFilter = THREE.NearestFilter;
+            //atlasUvLookupTexture.needsUpdate = true;
+
+            //  Create the terrain shader
             var uniforms:any = {
                 atlasTexture: { type: "t", value: atlasTexture }
             };
@@ -324,7 +405,7 @@ class TerrainSceneBuilder implements TerrainSceneBuilder {
                 "uniform sampler2D atlasUvTexture0;",
                 "varying vec2 vUv;",
                 "const float aw = float(" + tl.atlasData.atlasImage.naturalWidth + ");",
-                "const float atlasTileWidth = float(" + (tl.atlasData.atlasImage.naturalWidth / (256.0*32.0)) + ");",
+                "const float atlasTileWidth = float(" + (tl.atlasData.atlasImage.naturalWidth / (256.0 * 32.0)) + ");",
                 "const float atlasU = " + 1.0 / tl.atlasData.atlasImage.naturalWidth + ";",
                 "const float atlasV = " + 1.0 / tl.atlasData.atlasImage.naturalHeight + ";",
                 "const float atlasTileU = " + 32.0 / tl.atlasData.atlasImage.naturalWidth + ";",
@@ -337,54 +418,43 @@ class TerrainSceneBuilder implements TerrainSceneBuilder {
                 "const float tileResolutionUvOffset = 0.5 / tileResolution;",
                 THREE.ShaderChunk['common'],
                 THREE.ShaderChunk["shadowmap_pars_fragment"],
-                "void main() {",
-                    "vec2 mapUv = vUv;",
-                    "vec2 uv = (vUv * tileResolution) + vec2(tileResolutionUvOffset, tileResolutionUvOffset);",
-                    "vec2 uvoff = ((uv - floor(uv)) * vec2(atlasTileUx, atlasTileVx));",
-                    "float ralpha = 1.0;",
-                    "vec4 groundColour = vec4(0, 0, 0, 0);",
-                    (function () {
+                "void main() {", "vec2 mapUv = vUv;",
+                "vec2 uv = (vUv * tileResolution) + vec2(tileResolutionUvOffset, tileResolutionUvOffset);",
+                "vec2 uvoff = ((uv - floor(uv)) * vec2(atlasTileUx, atlasTileVx));",
+                "float ralpha = 1.0;",
+                "vec4 groundColour = vec4(0, 0, 0, 0);",
+                (function () {
                         return atlasUvTextureNames
-                            .reverse()
-                            //.filter(function (val, idx) { return idx > 0; })   //  skip???
-                            .map(function (texName, idx0) { //  selectMany???
-                                var idx = atlasUvTextureNames.length - (idx0 + 1);
-                                var layerUvsVar = "layer" + idx+ "Uvs";
-                                var layerCornerUvOffsetExpr = layerUvsVar + (idx % 2 == 0 ? ".r" : ".b");
-                                var layerEdgeUvOffsetExpr = layerUvsVar + (idx % 2 == 0 ? ".g" : ".a");
-                                var layerCornerUvVar = "layer" + idx + "CornerUv";
-                                var layerEdgeUvVar = "layer" + idx + "EdgeUv";
-                                var layerColourVar = "layer" + idx + "Colour";
-                                var setup = [
-                                    "vec4 " + layerUvsVar + " = texture2D(" + texName + ", mapUv);",
-                                    "vec2 " + layerCornerUvVar + " = vec2(mod(" + layerCornerUvOffsetExpr + "*32.0*255.0, aw)*atlasU, floor((" + layerCornerUvOffsetExpr + "*32.0*255.0)/aw)*atlasTileV) + uvoff;",
-                                    "vec2 " + layerEdgeUvVar + " = vec2(mod(" + layerEdgeUvOffsetExpr + "*32.0*255.0, aw)*atlasU, floor((" + layerEdgeUvOffsetExpr + "*32.0*255.0)/aw)*atlasTileV) + uvoff;",
-                                    "vec4 " + layerColourVar + " = max(texture2D(atlasTexture, " + layerCornerUvVar + "), texture2D(atlasTexture, " + layerEdgeUvVar + ")) * ralpha;",
-                                ];
-                                if (idx > 0) {
-                                    setup = setup.concat([
-                                        "groundColour += vec4(" + layerColourVar + ".rgb*" + layerColourVar + ".a, " + layerColourVar + ".a);",
-                                        "ralpha -= " + layerColourVar + ".a;"
-                                    ]);
-                                }
-                                else {
-                                    setup = setup.concat([
-                                        "groundColour += " + layerColourVar + ";"
-                                    ]);
-                                }
-                                return setup.join("\n");
-                            }).join("\n");
+                                .reverse()
+                                //.filter(function (val, idx) { return idx > 0; })   //  skip???
+                                .map(function (texName, idx0) { //  selectMany???
+                                        var idx = atlasUvTextureNames.length - (idx0 + 1);
+                                        var layerUvsVar = "layer" + idx + "Uvs";
+                                        var layerCornerUvOffsetExpr = layerUvsVar + (idx % 2 == 0 ? ".r" : ".b");
+                                        var layerEdgeUvOffsetExpr = layerUvsVar + (idx % 2 == 0 ? ".g" : ".a");
+                                        var layerCornerUvVar = "layer" + idx + "CornerUv";
+                                        var layerEdgeUvVar = "layer" + idx + "EdgeUv";
+                                        var layerColourVar = "layer" + idx + "Colour";
+                                        var setup = [
+                                            "vec4 " + layerUvsVar + " = texture2D(" + texName + ", mapUv);",
+                                            "vec2 " + layerCornerUvVar + " = vec2(mod(" + layerCornerUvOffsetExpr + "*32.0*255.0, aw)*atlasU, floor((" + layerCornerUvOffsetExpr + "*32.5*255.0)/aw)*atlasTileV) + uvoff;",
+                                            "vec2 " + layerEdgeUvVar + " = vec2(mod(" + layerEdgeUvOffsetExpr + "*32.0*255.0, aw)*atlasU, floor((" + layerEdgeUvOffsetExpr + "*32.0*255.0)/aw)*atlasTileV) + uvoff;",
+                                            "vec4 " + layerColourVar + " = max(texture2D(atlasTexture, " + layerCornerUvVar + "), texture2D(atlasTexture, " + layerEdgeUvVar + ")) * ralpha;",
+                                        ];
+                                        if (idx > 0) {
+                                                setup = setup.concat([
+                                                        "groundColour += vec4(" + layerColourVar + ".rgb*" + layerColourVar + ".a, " + layerColourVar + ".a);",
+                                                        "ralpha -= " + layerColourVar + ".a;"
+                                                    ]);
+                                            }
+                                        else {
+                                                setup = setup.concat([
+                                                        "groundColour += " + layerColourVar + ";"
+                                                    ]);
+                                            }
+                                        return setup.join("\n");
+                                    }).join("\n");
                     })(),
-                    //"vec4 layer01Uvs = texture2D(atlasUvTexture[0], mapUv);",
-                    //"vec2 layer1CornerUv = vec2(mod(layer01Uvs.b*32.0*255.0, aw)*atlasU, floor((layer01Uvs.b*32.0*255.0)/aw)*atlasTileV) + uvoff;",
-                    //"vec2 layer1EdgeUv = vec2(mod(layer01Uvs.a*32.0*255.0, aw)*atlasU, floor((layer01Uvs.a*32.0*255.0)/aw)*atlasTileV) + uvoff;",
-                    //"vec4 layer1 = max(texture2D(atlasTexture, layer1CornerUv), texture2D(atlasTexture, layer1EdgeUv)) * ralpha;",
-                    //"layer1 = vec4(layer1.rgb*layer1.a, layer1.a);",
-                    //"ralpha -= layer1.a;",
-
-                    //"vec2 layer0Uv = vec2(atlasTileU, 0.0) + uvoff;",
-                    //"vec4 layer0 = texture2D(atlasTexture, layer0Uv);",
-                    //"vec4 clayer = groundColour + layer0 * ralpha;",
                     "vec4 clayer = groundColour;",
                     "gl_FragColor = clayer * (0.25 + max(0.0, dot(vecNormal, directionalLightDirection) * 0.75));",
                 "}"
@@ -407,8 +477,8 @@ class TerrainSceneBuilder implements TerrainSceneBuilder {
                 lights: true
             });
             var ground = new THREE.Mesh(td.geometry, groundMaterial);
-            ground.rotation.x = -0.5 * Math.PI;
-            ground.position.set(0, 0, 0);
+            //ground.rotation.x = -0.5 * Math.PI;
+            //ground.position.set(0, 0, 0);
             ground.uvsNeedUpdate = true;
             //ground.castShadow = true;
             ground.receiveShadow = true;

@@ -59,7 +59,8 @@ function sprite3dUpdater(url, options) {
         fps         : coalesce(options, defaultOptions, function (o) { return o.fps; }),
         flip        : coalesce(options, defaultOptions, function (o) { return o.flip; }),
         offsetY     : coalesce(options, defaultOptions, function (o) { return o.offsetY; }),
-        scale       : coalesce(options, defaultOptions, function (o) { return o.scale; })
+        scale       : coalesce(options, defaultOptions, function (o) { return o.scale; }),
+        scaleY      : coalesce(options, defaultOptions, function (o) { return o.scaleY; }, function (o) { return o.scale; })
     };
     if (options && options.frames) {
         roptions.frames = options.frames;
@@ -78,7 +79,7 @@ function sprite3dUpdater(url, options) {
     var spriteMap = THREE.ImageUtils.loadTexture(url);
     var spriteMaterials = [];
     for (var i = 0; i < roptions.frames.length; ++i) {
-        var spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap, depthTest: false, useScreenCoordinates: true });
+        var spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap, depthTest: true, useScreenCoordinates: false, wireframe: true });
         spriteMaterial.map.offset = new THREE.Vector2(i / roptions.frames.length, 0);
         spriteMaterial.map.repeat = new THREE.Vector2(1 / roptions.frames.length, 1);
         spriteMaterials[i] = spriteMaterial;
@@ -92,7 +93,9 @@ function sprite3dUpdater(url, options) {
         //spriteObj.scale.set(this.frames(), this.frames(), 1);
         //sprite.scale.set(roptions.flip, 1, 1);
         //sprite.material.map = spriteMaterials[frame].map;
+
         sprite.material = spriteMaterials[frame];
+        //  TODO: Restore
         sprite.material.map.offset.x = frame / this.frames();   //  required, although it seems redundant...
     };
 
@@ -198,6 +201,7 @@ function buildSprite3dAnimator(scene) {
             } else {
                 scene.add(sprite);
             }
+
             return new sprite3dEntityActionRenderer(obj, sprite, entityAnimationGlue(ent), stateToSpriteUpdater);
         };
     };

@@ -101,3 +101,15 @@ function playerFollowerControllerFactory(entityManager) {
         return new playerFollowerController(ent, entityManager);
     };
 }
+
+function staticController(ent) {
+    this.update = function (moveProperties) {
+        return { facing: 0, x: ent.x(), y: ent.y(), z: ent.z() };
+    };
+}
+
+function staticControllerFactory(entityManager) {
+    this.buildController = function (ent) {
+        return new staticController(ent);
+    }
+}

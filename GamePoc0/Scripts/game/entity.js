@@ -26,6 +26,9 @@ function entity(x, z, rendererFactory, controllerFactory) {
     var renderer = rendererFactory.buildRenderer(this);
     var controller = controllerFactory.buildController(this);
     this.update = function () {
+        if (!controller) {
+            return;
+        }
         var s = controller.update();
         pos[0] = s.x;
         pos[1] = s.y;

@@ -10,11 +10,22 @@
 -->
 <script src="~/Scripts/three.js"></script>
 <script src="~/Scripts/TrackballControls.js"></script>
+
+<!--
 <script src="~/Scripts/game/sprite3d.js"></script>
-<script src="~/Scripts/game/keys.js"></script>
-<script src="~/Scripts/game/controllers.js"></script>
 <script src="~/Scripts/game/entity.js"></script>
+<script src="~/Scripts/game/controllers.js"></script>
+-->
+<script src="~/Scripts/game/geom.js"></script>
+<script src="~/Scripts/game/entities.js"></script>
+<script src="~/Scripts/game/entityControllers.js"></script>
+<script src="~/Scripts/game/sprites.js"></script>
+<script src="~/Scripts/game/spriteAnimation.js"></script>
+<script src="~/Scripts/game/keys.js"></script>
+<!--
+<script src="~/Scripts/game/terrainGeometry.js"></script>
 <script src="~/Scripts/game/terrainLoader2.js"></script>
+-->
 <script src="~/Scripts/game/terrainDataLoader.js"></script>
 <script src="~/Scripts/jquery.signalR-2.1.2.min.js"></script>
 <script src="~/signalr/hubs"></script>
@@ -115,6 +126,13 @@
             .glue(ANIM_ACTION_WAIT, new sprite3dUpdater(imageAsset("test-s-walk.png"), { frameCount: 4, offsetY: 2 }))
             .addSpriteShadow(imageAsset("shadow.png"))
         ;
+        var butterflyRenderer = buildSprite3dAnimator(scene)
+            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("butterfly.png"), { frameCount: 2, offsetY: 3, scale: 0.5 }))
+        ;
+        var treeRenderer = buildSprite3dAnimator(scene)
+            .glue(ANIM_ACTION_WAIT, new sprite3dUpdater(imageAsset("tree0.png"), { frameCount: 1, offsetY: 1, scaleX: 4, scaleY: 8 }))
+            .addSpriteShadow(imageAsset("shadow.png"))
+        ;
         var sheepRenderer = buildSprite3dAnimator(scene)
             .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-ew-walk.png"), { frameCount: 2, offsetY: 1, scale: 2 }))
             .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-n-walk.png"), { frameCount: 2, offsetY: 1, scale: 2 }), NORTH)
@@ -131,6 +149,13 @@
         var player = entities.setPlayer(entities.add(new entity(0, 0, personRenderer, new playerControllerFactory())));
         // var follower = entities.add(new entity(5, 0, personRenderer, new playerFollowerControllerFactory(entities)));
         var follower = entities.add(new entity(5, 0, sheepRenderer, new playerFollowerControllerFactory(entities)));
+        entities.add(new entity(5, 20, butterflyRenderer, new playerFollowerControllerFactory(entities)));
+        entities.add(new entity(10, 20, treeRenderer, new staticControllerFactory(entities)));
+
+        //var tree = new THREE.Sprite(new THREE.SpriteMaterial({ map: THREE.ImageUtils.loadTexture(imageAsset("tree0.png")), depthTest: false, useScreenCoordinates: true }));
+        //tree.scale.set(8, 16 , 8);
+        //tree.position.set(0, 0, 0);
+        //scene.add(tree);
         //entities.add(new entity(0, 5, personRenderer, new playerFollowerControllerFactory(entities)));
         //entities.add(new entity(-5, 0, personRenderer, new playerFollowerControllerFactory(entities)));
         //entities.add(new entity(-5, -5, personRenderer, new playerFollowerControllerFactory(entities)));
@@ -166,16 +191,18 @@
         function renderScene() {
             requestAnimationFrame(renderScene);
             if (terrainGeometryData) {
+
                 for (var i = 0; i < entities.all.length; ++i) {
                     var entity = entities.all[i];
                     entity.sety(terrainGeometryData.getY(entity.x(), entity.z()));
                     entity.update();
                 }
+                //tree.position.set(0, terrainGeometryData.getY(0, 0) + 2, 0);
             }
             sphere.position.set(player.x(), player.y() + 5, player.z());
             //spotLight.target.position = new THREE.Vector3(player.x(), player.y(), player.z());
             //cameraControls.update(clock.getDelta());
-            camera.position.set(player.x(), player.y() + 60, player.z() + 10);
+            camera.position.set(player.x(), player.y() + 30, player.z() + 30);
             camera.lookAt(new THREE.Vector3(player.x(), player.y(), player.z()));
             renderer.render(scene, camera);
             //renderer.autoClear = false;

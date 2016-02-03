@@ -293,7 +293,7 @@
     <Content Include="Content\assets\images\source\test-swse-walk-20151016-161631.piskel" />
     <Content Include="Content\assets\atlas\atlas-test-uv.json" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
-    <Content Include="Scripts\game\bootstrap.js" />
+    <Content Include="Scripts\game\__bootstrap.js" />
     <Content Include="Scripts\game\controllers.js" />
     <Content Include="Scripts\game\dat.gui.js" />
     <Content Include="Scripts\game\entity.js" />
@@ -301,6 +301,7 @@
     <Content Include="Scripts\game\keys.js" />
     <Content Include="Scripts\game\sprite.js" />
     <Content Include="Scripts\game\sprite3d.js" />
+    <Content Include="Scripts\game\terrainGeometry.js" />
     <Content Include="Scripts\game\terrainLoader.js" />
     <Content Include="Scripts\game\terrainLoader2.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
@@ -349,6 +350,12 @@
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Scripts\game\bootstrap.ts" />
+    <TypeScriptCompile Include="Scripts\game\entities.ts" />
+    <TypeScriptCompile Include="Scripts\game\entityControllers.ts" />
+    <TypeScriptCompile Include="Scripts\game\geom.ts" />
+    <TypeScriptCompile Include="Scripts\game\spriteGlue.ts" />
+    <TypeScriptCompile Include="Scripts\game\sprites.ts" />
     <TypeScriptCompile Include="Scripts\game\terrainDataLoader.ts" />
     <TypeScriptCompile Include="Scripts\game\utils.ts" />
   </ItemGroup>

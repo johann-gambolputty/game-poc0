@@ -3,6 +3,7 @@
   "tileSets": [
     {
       "name": "mudBlobs",
+      "typeId":  0,
       "baseTileInfo": {
         "u": 32,
         "v": 0
@@ -164,6 +165,7 @@
     },
     {
       "name": "rockBlobs",
+      "typeId":  1,
       "baseTileInfo": {
         "u": 0,
         "v": 32
@@ -325,6 +327,7 @@
     },
     {
       "name": "lushGrass",
+      "typeId":  2,
       "baseTileInfo": {
         "u": 992,
         "v": 32
