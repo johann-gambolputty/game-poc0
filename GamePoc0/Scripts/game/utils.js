@@ -1,3 +1,35 @@
+function coalesceProperty(get) {
+    var objs = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        objs[_i - 1] = arguments[_i];
+    }
+    for (var _a = 0; _a < objs.length; _a++) {
+        var o = objs[_a];
+        var r = get(o);
+        if (r) {
+            return r;
+        }
+    }
+    return null;
+}
+function nvl(v0, v1) {
+    return v0 ? v0 : v1;
+}
+function firstValid() {
+    var funcs = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        funcs[_i - 0] = arguments[_i];
+    }
+    return function (o) {
+        for (var f in funcs) {
+            var r = f(o);
+            if (r) {
+                return r;
+            }
+        }
+        return null;
+    };
+}
 function clamp(v, min, max) {
     return v < min ? min : (v > max ? max : v);
 }

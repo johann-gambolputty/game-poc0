@@ -2,6 +2,32 @@
 declare var $: any;
 declare var THREE: any;
 
+function coalesceProperty<TIn, TOut>(get: (o: TIn) => TOut, ...objs: Array<TIn>) {
+    for (var o of objs) {
+        var r = get(o);
+        if (r) {
+            return r;
+        }
+    }
+    return null;
+}
+function nvl<T>(v0: T, v1: T): T {
+    return v0 ? v0 : v1;
+}
+
+function firstValid<TIn, TOut>(...funcs: Array<(TIn) => TOut>): (TIn) => TOut {
+    return (o: TIn): TOut => {
+        for (var f in funcs) {
+            var r = f(o);
+            if (r) {
+                return r;
+            }
+        }
+        return null;
+    };
+}
+
+
 function clamp(v: number, min: number, max: number) {
     return v < min ? min : (v > max ? max : v);
 }

@@ -11,21 +11,26 @@
 <script src="~/Scripts/three.js"></script>
 <script src="~/Scripts/TrackballControls.js"></script>
 
-<!--
 <script src="~/Scripts/game/sprite3d.js"></script>
 <script src="~/Scripts/game/entity.js"></script>
 <script src="~/Scripts/game/controllers.js"></script>
--->
+
+<script src="~/Scripts/game/utils.js"></script>
 <script src="~/Scripts/game/geom.js"></script>
+<script src="~/Scripts/game/assets.js"></script>
+<script src="~/Scripts/game/sprites.js"></script>
+<script src="~/Scripts/game/sceneQuery.js"></script>
 <script src="~/Scripts/game/entities.js"></script>
 <script src="~/Scripts/game/entityControllers.js"></script>
-<script src="~/Scripts/game/sprites.js"></script>
+<script src="~/Scripts/game/animation.js"></script>
 <script src="~/Scripts/game/spriteAnimation.js"></script>
+<script src="~/Scripts/game/entityTypes.js"></script>
 <script src="~/Scripts/game/keys.js"></script>
 <!--
-<script src="~/Scripts/game/terrainGeometry.js"></script>
 <script src="~/Scripts/game/terrainLoader2.js"></script>
 -->
+<script src="~/Scripts/game/terrainGeometry.js"></script>
+
 <script src="~/Scripts/game/terrainDataLoader.js"></script>
 <script src="~/Scripts/jquery.signalR-2.1.2.min.js"></script>
 <script src="~/signalr/hubs"></script>
@@ -121,6 +126,9 @@
             tsBuilder.build(tg, tl);
             terrainGeometryData = tg;
         });
+        var allEntities = new EntityManager(scene, new SceneQuery(function (x, z) { return terrainGeometryData ? terrainGeometryData.getY(x, z) : 0.0; }));
+        allEntities.addEntity(new Entity(), EntityTypes.playerEntityType);
+
         var personRenderer = buildSprite3dAnimator(scene)
             .glueWalk(imageAsset("test"), { offsetY: 2 })
             .glue(ANIM_ACTION_WAIT, new sprite3dUpdater(imageAsset("test-s-walk.png"), { frameCount: 4, offsetY: 2 }))
@@ -197,8 +205,15 @@
                     entity.sety(terrainGeometryData.getY(entity.x(), entity.z()));
                     entity.update();
                 }
+
+                //for (var i = 0; i < allEntities.all.length; ++i) {
+                //    var entity = allEntities.all[i].entity;
+                //    entity.state.position.y = terrainGeometryData.getY(entity.state.position.x, entity.state.position.z);
+                //    allEntities.all[i].renderer.update();
+                //}
                 //tree.position.set(0, terrainGeometryData.getY(0, 0) + 2, 0);
             }
+            allEntities.update();
             sphere.position.set(player.x(), player.y() + 5, player.z());
             //spotLight.target.position = new THREE.Vector3(player.x(), player.y(), player.z());
             //cameraControls.update(clock.getDelta());

@@ -116,7 +116,7 @@ var TerrainGeometryDataLoader = (function () {
         };
     }
     TerrainGeometryDataLoader.prototype.load = function () {
-        return loadImageDeferred(this.heightmapUrl).pipe(this.heightmapProcessor);
+        return Assets.loadImageDeferred(this.heightmapUrl).pipe(this.heightmapProcessor);
     };
     return TerrainGeometryDataLoader;
 })();
@@ -145,7 +145,7 @@ var AtlasUvData = (function () {
 var TerrainAtlasDataLoader = (function () {
     function TerrainAtlasDataLoader(atlasUrl, atlasUvUrl) {
         this.loader = function () {
-            return $.when(loadImageDeferred(atlasUrl), $.getJSON(atlasUvUrl)).pipe(function (atlasImage, atlasUvData) {
+            return $.when(Assets.loadImageDeferred(atlasUrl), $.getJSON(atlasUvUrl)).pipe(function (atlasImage, atlasUvData) {
                 return new TerrainAtlasData(atlasImage, atlasUvData[0]);
             });
         };
@@ -180,7 +180,7 @@ var SimpleTerrainLayerMapLoader = (function () {
         this.colourToType.push({ colour: 0x000000, type: 2, layer: 1 });
         var _this = this;
         this.loader = function () {
-            return $.when(loadImageDeferred(layerMapUrl), atlasLoader.load())
+            return $.when(Assets.loadImageDeferred(layerMapUrl), atlasLoader.load())
                 .pipe(function (layerMap, atlasData) {
                 var emptyTileUv = 0;
                 var tileSize = atlasData.atlasUvData.tileSize;
@@ -419,7 +419,6 @@ var TerrainSceneBuilder = (function () {
                 "gl_FragColor = clayer * (0.25 + max(0.0, dot(vecNormal, directionalLightDirection) * 0.75));",
                 "}"
             ].join("\n");
-            console.log(fshader);
             var lightUniforms = THREE.UniformsLib['lights'];
             for (var property in lightUniforms) {
                 uniforms[property] = lightUniforms[property];

@@ -13,25 +13,15 @@ interface IEntityRenderer {
 }
 
 interface IEntityRendererFactory {
-    create(entity: IEntity): IEntityRenderer;
+    create(scene:any, entity: IEntity): IEntityRenderer;
 }
 
 interface IEntityController {
     createNextState():IEntityState;
 }
 
-class HeightEntityContoller implements IEntityController {
-    constructor(private inner: IEntityController, private posToHeight: (x:number, z:number)=>number) {
-    }
-    createNextState(): IEntityState {
-        var nextState = this.inner.createNextState();
-        nextState.position.y = this.posToHeight(nextState.position.x, nextState.position.z);
-        return nextState;
-    }
-}
-
 interface IEntityControllerFactory {
-    create(entity: IEntity): IEntityController;
+    create(entity: IEntity, sceneQuery: ISceneQuery): IEntityController;
 }
 
 class Entity implements IEntity {
@@ -58,8 +48,10 @@ interface IEntityRecord {
 
 class EntityManager implements IEntityManager {
     all: IEntityRecord[] = [];
+    constructor(private scene: any, private sceneQuery: ISceneQuery) {
+    }
     addEntity(entity: IEntity, entityType: IEntityType) {
-        this.all.push({ entity: entity, type: entityType, renderer: entityType.rendererFactory.create(entity), controller: entityType.controllerFactory.create(entity) });
+        this.all.push({ entity: entity, type: entityType, renderer: entityType.rendererFactory.create(this.scene, entity), controller: entityType.controllerFactory.create(entity, this.sceneQuery) });
     }
     update() {
         for (var i = 0; i < this.all.length; ++i) {
@@ -72,11 +64,9 @@ class EntityManager implements IEntityManager {
 class EntityType implements IEntityType {
     controllerFactory: IEntityControllerFactory;
     rendererFactory: IEntityRendererFactory;
-    constructor(cf: (e: IEntity) => IEntityController, rf: (e: IEntity) => IEntityRenderer) {
+    constructor(cf: (e: IEntity, sq: ISceneQuery) => IEntityController, rf: (scene: any, e: IEntity) => IEntityRenderer) {
         this.controllerFactory = { create: cf };
         this.rendererFactory = { create: rf };
 
     }
 }
-
-new EntityManager().addEntity(null, new EntityType(e => new PlayerEntityController(e), e => null));

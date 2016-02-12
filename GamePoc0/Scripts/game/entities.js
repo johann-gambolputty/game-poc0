@@ -1,15 +1,3 @@
-var HeightEntityContoller = (function () {
-    function HeightEntityContoller(inner, posToHeight) {
-        this.inner = inner;
-        this.posToHeight = posToHeight;
-    }
-    HeightEntityContoller.prototype.createNextState = function () {
-        var nextState = this.inner.createNextState();
-        nextState.position.y = this.posToHeight(nextState.position.x, nextState.position.z);
-        return nextState;
-    };
-    return HeightEntityContoller;
-})();
 var Entity = (function () {
     function Entity() {
         this.state = { facing: 0, position: new Vector3d(0, 0, 0) };
@@ -17,11 +5,13 @@ var Entity = (function () {
     return Entity;
 })();
 var EntityManager = (function () {
-    function EntityManager() {
+    function EntityManager(scene, sceneQuery) {
+        this.scene = scene;
+        this.sceneQuery = sceneQuery;
         this.all = [];
     }
     EntityManager.prototype.addEntity = function (entity, entityType) {
-        this.all.push({ entity: entity, type: entityType, renderer: entityType.rendererFactory.create(entity), controller: entityType.controllerFactory.create(entity) });
+        this.all.push({ entity: entity, type: entityType, renderer: entityType.rendererFactory.create(this.scene, entity), controller: entityType.controllerFactory.create(entity, this.sceneQuery) });
     };
     EntityManager.prototype.update = function () {
         for (var i = 0; i < this.all.length; ++i) {
@@ -38,4 +28,3 @@ var EntityType = (function () {
     }
     return EntityType;
 })();
-new EntityManager().addEntity(null, new EntityType(function (e) { return new PlayerEntityController(e); }, function (e) { return null; }));

@@ -23,32 +23,6 @@ DIRECTIONS[WEST] = { walkSpriteFlip: -1, defaultWalkSpriteSuffix: "-ew-walk.png"
 DIRECTIONS[SOUTH_WEST] = { walkSpriteFlip: -1, defaultWalkSpriteSuffix: "-swse-walk.png" }   //  7: SOUTH-WEST
 
 
-function nvl<T>(v0: T, v1: T): T {
-    return v0 ? v0 : v1;
-}
-
-function firstValid<TIn, TOut>(...funcs: Array<(TIn) => TOut>): (TIn)=>TOut {
-    return (o: TIn): TOut => {
-        for (var f in funcs) {
-            var r = f(o);
-            if (r) {
-                return r;
-            }
-        }
-        return null;
-    };
-}
-
-function coalesce<TIn, TOut>(get: (o:TIn)=>TOut, ...objs: Array<TIn>) {
-    for (var o in objs) {
-        var r = get(o);
-        if (r) {
-            return r;
-        }
-    }
-    return null;
-}
-
 //  default image, 4 32x32 frames, 8 fps
 //      sprite("test);
 //  default image, 3 31x31 frames, 8 fps
@@ -84,16 +58,24 @@ function coalesceSpriteOptions(defaultOptions: ISpriteOptions, options: ISpriteO
     if (defaultOptions == null) {
         return options;
     }
-    return {
-        width: coalesce(o => o.width, options, defaultOptions),
-        height: coalesce(o => o.height, options, defaultOptions),
-        frameCount: coalesce(o => o.frameCount, options, defaultOptions),
-        fps: coalesce(o => o.fps, options, defaultOptions),
-        flip: coalesce(o => o.flip, options, defaultOptions),
-        offsetX: coalesce(o => o.offsetY, options, defaultOptions),
-        offsetY: coalesce(o => o.offsetY, options, defaultOptions),
-        scale: coalesce(o => o.scale, options, defaultOptions),
-        scaleX: coalesce(o => nvl(o.scaleX, o.scale), options, defaultOptions),
-        scaleY: coalesce(o => nvl(o.scaleY, o.scale), options, defaultOptions)
+    var cOptions: ISpriteOptions = {
+        width: coalesceProperty(o => o.width, options, defaultOptions),
+        height: coalesceProperty(o => o.height, options, defaultOptions),
+        frameCount: coalesceProperty(o => o.frameCount, options, defaultOptions),
+        fps: coalesceProperty(o => o.fps, options, defaultOptions),
+        flip: coalesceProperty(o => o.flip, options, defaultOptions),
+        offsetX: coalesceProperty(o => o.offsetY, options, defaultOptions),
+        offsetY: coalesceProperty(o => o.offsetY, options, defaultOptions),
+        scale: coalesceProperty(o => o.scale, options, defaultOptions),
+        scaleX: coalesceProperty(o => nvl(o.scaleX, o.scale), options, defaultOptions),
+        scaleY: coalesceProperty(o => nvl(o.scaleY, o.scale), options, defaultOptions),
+        frames: coalesceProperty(o => o.frames, options, defaultOptions)
     };
+    if (cOptions.frames == null) {
+        cOptions.frames = [];
+        for (var i = 0; i < cOptions.frameCount; ++i) {
+            cOptions.frames.push({ u: i * cOptions.width, v: 0, w: cOptions.width, h: cOptions.height });
+        }
+    }
+    return cOptions;
 }

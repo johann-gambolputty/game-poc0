@@ -316,6 +316,8 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
+    <Content Include="Scripts\three.js" />
+    <Content Include="Scripts\three.min.js" />
     <Content Include="Scripts\TrackballControls.js" />
     <Content Include="test.html" />
     <Content Include="Views\Home\Index.cshtml" />
@@ -350,11 +352,15 @@
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Scripts\game\animation.ts" />
+    <TypeScriptCompile Include="Scripts\game\assets.ts" />
     <TypeScriptCompile Include="Scripts\game\bootstrap.ts" />
     <TypeScriptCompile Include="Scripts\game\entities.ts" />
     <TypeScriptCompile Include="Scripts\game\entityControllers.ts" />
+    <TypeScriptCompile Include="Scripts\game\entityTypes.ts" />
     <TypeScriptCompile Include="Scripts\game\geom.ts" />
-    <TypeScriptCompile Include="Scripts\game\spriteGlue.ts" />
+    <TypeScriptCompile Include="Scripts\game\sceneQuery.ts" />
+    <TypeScriptCompile Include="Scripts\game\spriteAnimation.ts" />
     <TypeScriptCompile Include="Scripts\game\sprites.ts" />
     <TypeScriptCompile Include="Scripts\game\terrainDataLoader.ts" />
     <TypeScriptCompile Include="Scripts\game\utils.ts" />

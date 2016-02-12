@@ -215,6 +215,7 @@ function sprite3dEntityActionRenderer(spriteObj, sprite, entAnimState, actionToS
         for (var i = 0; i < actionToSpriteUpdater.length; ++i) {
             var spriteUpdater = actionToSpriteUpdater[i](state);
             if (spriteUpdater) {
+
                 return spriteUpdater;
             }
         }

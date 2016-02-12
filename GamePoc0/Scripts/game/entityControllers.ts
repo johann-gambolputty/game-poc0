@@ -1,8 +1,27 @@
-﻿class PlayerEntityController implements IEntityController {
+﻿
+class HeightEntityContoller implements IEntityController {
+    constructor(private inner: IEntityController, private posToHeight: (x: number, z: number) => number) {
+    }
+    createNextState(): IEntityState {
+        var nextState = this.inner.createNextState();
+        nextState.position.y = this.posToHeight(nextState.position.x, nextState.position.z);
+        return nextState;
+    }
+}
+
+class NullEntityController implements IEntityController {
     constructor(private e: IEntity) {
     }
     createNextState(): IEntityState {
-        return null;
+        return this.e.state;
+    }
+}
+
+class PlayerEntityController implements IEntityController {
+    constructor(private e: IEntity) {
+    }
+    createNextState(): IEntityState {
+        return this.e.state;
     }
     //var defaultMoveProperties = { speed: 0.1 };
 

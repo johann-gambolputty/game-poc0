@@ -123,7 +123,7 @@ class TerrainGeometryDataLoader implements ITerrainGeometryDataLoader {
     }
 
     load(): any {
-        return loadImageDeferred(this.heightmapUrl).pipe(this.heightmapProcessor);
+        return Assets.loadImageDeferred(this.heightmapUrl).pipe(this.heightmapProcessor);
     }
 }
 
@@ -161,7 +161,7 @@ class TerrainAtlasDataLoader implements ITerrainAtlasDataLoader {
     constructor(atlasUrl: string, atlasUvUrl: string) {
         this.loader = function () {
             return $.when(
-                loadImageDeferred(atlasUrl),
+                Assets.loadImageDeferred(atlasUrl),
                 $.getJSON(atlasUvUrl)
             ).pipe(function (atlasImage, atlasUvData) {
                 return new TerrainAtlasData(atlasImage, atlasUvData[0]);
@@ -253,7 +253,7 @@ class SimpleTerrainLayerMapLoader implements ITerrainLayerMapLoader {
         this.colourToType.push({ colour: 0x000000, type: 2, layer: 1 });
         var _this = this;
         this.loader = function () {
-            return $.when(loadImageDeferred(layerMapUrl), atlasLoader.load())
+            return $.when(Assets.loadImageDeferred(layerMapUrl), atlasLoader.load())
                 .pipe(function (layerMap: HTMLImageElement, atlasData: TerrainAtlasData) {
                     var emptyTileUv = 0;
                     var tileSize = atlasData.atlasUvData.tileSize;
@@ -459,8 +459,6 @@ class TerrainSceneBuilder implements TerrainSceneBuilder {
                     "gl_FragColor = clayer * (0.25 + max(0.0, dot(vecNormal, directionalLightDirection) * 0.75));",
                 "}"
             ].join("\n");
-
-            console.log(fshader);
 
             var lightUniforms = THREE.UniformsLib['lights'];
             for (var property in lightUniforms) {
