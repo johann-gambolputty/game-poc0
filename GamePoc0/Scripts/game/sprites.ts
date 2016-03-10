@@ -42,7 +42,7 @@ interface ISpriteOptions {
     height?: number;
     fps?: number;
     frameCount?: number;
-    flip?: number;
+    flip?: boolean;
     offsetX?: number;
     offsetY?: number;
     scale?: number;

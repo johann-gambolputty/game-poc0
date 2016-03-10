@@ -4,7 +4,7 @@
     {
     }
 
-    public class SharedWorld
+    public class SharedWorld : ISharedWorld
     {
     }
 

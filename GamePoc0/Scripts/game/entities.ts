@@ -2,10 +2,13 @@
 interface IEntityState {
     facing: number;
     position: Vector3d;
+    changePositionAndFacing(pos: Vector3d, facing: number): IEntityState;
 }
 
 interface IEntity {
     state: IEntityState;
+    moveTo(x: number, y: number, z: number): IEntity;
+    traits: TraitContainer;
 }
 
 interface IEntityRenderer {
@@ -21,20 +24,34 @@ interface IEntityController {
 }
 
 interface IEntityControllerFactory {
-    create(entity: IEntity, sceneQuery: ISceneQuery): IEntityController;
+    create(entity: IEntity, gc: IGameContext): IEntityController;
+}
+
+class EntityState implements IEntityState {
+    constructor(public position: Vector3d, public facing: number) { }
+    changePositionAndFacing(pos: Vector3d, facing: number): IEntityState {
+        return new EntityState(pos, facing);
+    }
 }
 
 class Entity implements IEntity {
-    state: IEntityState = { facing: 0, position: new Vector3d(0, 0, 0) };
+    traits = new TraitContainer();
+    state: IEntityState = new EntityState(Vector3d.origin, 0);
+    moveTo(x: number, y: number, z: number): IEntity {
+        this.state.position = new Vector3d(x, y, z);
+        return this;
+    }
 }
 
 interface IEntityType {
     rendererFactory: IEntityRendererFactory;
     controllerFactory: IEntityControllerFactory;
+    defaultTraits: ITraitContainerBuilder;
 }
 
 interface IEntityManager {
-    addEntity(entity: IEntity, entityType: IEntityType);
+    first(predicate: (entity: IEntity) => boolean): IMaybe<IEntity>;
+    addEntity(entityType: IEntityType): IEntity;
     update();
 }
 
@@ -48,10 +65,21 @@ interface IEntityRecord {
 
 class EntityManager implements IEntityManager {
     all: IEntityRecord[] = [];
-    constructor(private scene: any, private sceneQuery: ISceneQuery) {
+    constructor(private scene: any, private gc: IGameContext) {
     }
-    addEntity(entity: IEntity, entityType: IEntityType) {
-        this.all.push({ entity: entity, type: entityType, renderer: entityType.rendererFactory.create(this.scene, entity), controller: entityType.controllerFactory.create(entity, this.sceneQuery) });
+    first(predicate: (entity: IEntity) => boolean): IMaybe<IEntity> {
+        for (var i = 0; i < this.all.length; ++i) {
+            if (predicate(this.all[i].entity)) {
+                return Maybe.to(this.all[i].entity);
+            }
+        }
+        return Maybe.empty<IEntity>();
+    }
+    addEntity(entityType: IEntityType): IEntity {
+        var entity = new Entity();
+        entity.traits = entityType.defaultTraits.build();
+        this.all.push({ entity: entity, type: entityType, renderer: entityType.rendererFactory.create(this.scene, entity), controller: entityType.controllerFactory.create(entity, this.gc) });
+        return entity;
     }
     update() {
         for (var i = 0; i < this.all.length; ++i) {
@@ -64,9 +92,8 @@ class EntityManager implements IEntityManager {
 class EntityType implements IEntityType {
     controllerFactory: IEntityControllerFactory;
     rendererFactory: IEntityRendererFactory;
-    constructor(cf: (e: IEntity, sq: ISceneQuery) => IEntityController, rf: (scene: any, e: IEntity) => IEntityRenderer) {
+    constructor(cf: (e: IEntity, gc: IGameContext) => IEntityController, rf: (scene: any, e: IEntity) => IEntityRenderer, public defaultTraits: ITraitContainerBuilder) {
         this.controllerFactory = { create: cf };
         this.rendererFactory = { create: rf };
-
     }
 }

@@ -68,6 +68,7 @@
     <Compile Include="World\Shared\SharedEntity.cs" />
     <Compile Include="World\Shared\SharedWorld.cs" />
     <Compile Include="World\Shared\SharedWorldFrame.cs" />
+    <Compile Include="World\Shared\SharedWorldPublisher.cs" />
     <Compile Include="World\Shared\SharedWorldSyncAction.cs" />
   </ItemGroup>
   <ItemGroup>

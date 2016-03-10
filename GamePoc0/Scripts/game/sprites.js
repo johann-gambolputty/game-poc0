@@ -50,3 +50,4 @@ function coalesceSpriteOptions(defaultOptions, options) {
     }
     return cOptions;
 }
+//# sourceMappingURL=sprites.js.map

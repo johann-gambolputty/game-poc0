@@ -49,7 +49,7 @@ THREE.TerrainGeometry = function (width, height, widthSegments, heightSegments, 
             //normals[offset + 2] = 1;  //  OLD: No longer planar
 
             uvs[offset2] = ix / gridX;
-            uvs[offset2 + 1] = 1 - (iy / gridY);
+            uvs[offset2 + 1] = (iy / gridY);
 
             offset += 3;
             offset2 += 2;
@@ -83,7 +83,6 @@ THREE.TerrainGeometry = function (width, height, widthSegments, heightSegments, 
 
             offset += 6;
         }
-
     }
 
     this.addAttribute('index', new THREE.BufferAttribute(indices, 1));

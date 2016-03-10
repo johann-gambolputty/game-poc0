@@ -81,3 +81,4 @@ var AnimationBuilder = (function () {
     };
     return AnimationBuilder;
 })();
+//# sourceMappingURL=animation.js.map

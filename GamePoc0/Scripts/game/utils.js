@@ -1,3 +1,44 @@
+var Tuple;
+(function (Tuple) {
+    function create(item0, item1, item2) {
+        if (typeof item2 === 'undefined') {
+            return new Tuple2(item0, item1);
+        }
+        return new Tuple3(item0, item1, item2);
+    }
+    Tuple.create = create;
+})(Tuple || (Tuple = {}));
+var Tuple2 = (function () {
+    function Tuple2(item0, item1) {
+        this.item0 = item0;
+        this.item1 = item1;
+    }
+    return Tuple2;
+})();
+var Tuple3 = (function () {
+    function Tuple3(item0, item1, item2) {
+        this.item0 = item0;
+        this.item1 = item1;
+        this.item2 = item2;
+    }
+    return Tuple3;
+})();
+var Promises;
+(function (Promises) {
+    function when(p0, p1) {
+        var p = $.Deferred();
+        $.when(p0, p1)
+            .then(function (x, y) {
+            p.resolve(Tuple.create(x, y));
+        }, function (x) {
+            p.fail();
+        }, function (x) {
+            p.progress();
+        });
+        return p.promise();
+    }
+    Promises.when = when;
+})(Promises || (Promises = {}));
 function coalesceProperty(get) {
     var objs = [];
     for (var _i = 1; _i < arguments.length; _i++) {
@@ -63,3 +104,4 @@ function canvasImage(canvas, img, w, h) {
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     return ctx;
 }
+//# sourceMappingURL=utils.js.map

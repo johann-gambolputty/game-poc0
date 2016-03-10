@@ -24,9 +24,17 @@
 <script src="~/Scripts/game/entityControllers.js"></script>
 <script src="~/Scripts/game/animation.js"></script>
 <script src="~/Scripts/game/spriteAnimation.js"></script>
+<script src="~/Scripts/game/traits.js"></script>
+<script src="~/Scripts/game/entityTraits.js"></script>
 <script src="~/Scripts/game/entityTypes.js"></script>
-<script src="~/Scripts/game/keys.js"></script>
+<script src="~/Scripts/game/keyStates.js"></script>
+<script src="~/Scripts/game/bootstrap.js"></script>
+<script src="~/Scripts/game/core.js"></script>
+<script src="~/Scripts/game/gameTraits.js"></script>
+<script src="~/Scripts/game/terrainDecal.js"></script>
+<script src="~/Scripts/game/terrainBufferGeometry.js"></script>
 <!--
+<script src="~/Scripts/game/keys.js"></script>
 <script src="~/Scripts/game/terrainLoader2.js"></script>
 -->
 <script src="~/Scripts/game/terrainGeometry.js"></script>
@@ -39,6 +47,9 @@
     $(document).ready(function () {
 
         var chat = $.connection.gameHub;
+        chat.client.worldUpdate = function (updates) {
+            console.log("holy shit i got an update: " + updates);
+        };
         chat.client.broadcastMessage = function (name, message) {
             // Html encode display name and message.
             var encodedName = $('<div />').text(name).html();
@@ -60,168 +71,18 @@
 
 
         var container = document.getElementById("mainCanvasContainer");
+        var game = Bootstrap.setup(container);
 
-        var scene = new THREE.Scene();
         var clock = new THREE.Clock();
         var renderer = new THREE.WebGLRenderer();
         renderer.setClearColor(0xEEEEEE, 0xff);
         renderer.setSize(container.offsetWidth, container.offsetHeight);
         container.appendChild(renderer.domElement);
 
-
-        //var spotLight = new THREE.SpotLight(0xffffff, 1.0);
-        //spotLight.position.set(0, 0, 30);
-        //spotLight.castShadow = true;
-        //scene.add(spotLight);
-        var light = new THREE.DirectionalLight(0xffffff, 1.0);
-        light.position.set(100, 0, 100);
-        light.castShadow = true;
-        scene.add(light);
-
-        //  SHADOWS
-        renderer.shadowMapEnabled = true;
-        renderer.shadowMapSoft = false;
-        renderer.shadowCameraNear = 3;
-        renderer.shadowCameraFar = 1000;
-        renderer.shadowCameraFov = 50;
-
-        renderer.shadowMapBias = 0.0039;
-        renderer.shadowMapDarkness = 0.5;
-        renderer.shadowMapWidth = 1024;
-        renderer.shadowMapHeight = 1024;
-
-        function asset(path) {
-            return "/Content/assets/" + path;
-        }
-
-        function imageAsset(image) {
-            return asset("images/" + image);
-        }
-        
-        function atlasAsset(p) {
-            return asset("atlas/" + p);
-        }
-        //var testContainer = document.getElementById("testCanvasContainer");
-        //var testCanvas = document.createElement("canvas");
-        //testCanvas.width = testContainer.clientWidth;
-        //testCanvas.height = testContainer.clientHeight;
-        //testContainer.appendChild(testCanvas);
-        //var terrain = terrainLoader(scene, imageAsset("tile-map.png"), imageAsset("grounddata-quantized.png"),
-        //    imageAsset("tile-opacity-map.png"),
-        //    [imageAsset("tile-mud-blobs-0.png"), imageAsset("tile-grass-lush-0.png")],
-        //    testCanvas
-        //);
-        var terrainGeometryData = null;
-        var tgLoader = new TerrainGeometryDataLoader(imageAsset("grounddata.png"), 256, 256, 128, 128);
-        //var tgLoader = new TerrainGeometryDataLoader(imageAsset("low-to-high.png"), 256, 256, 128, 128);
-        var taLoader = new TerrainAtlasDataLoader(atlasAsset("atlas-test.png"), atlasAsset("atlas-test-uv.json"));
-        //var tlLoader = new SimpleTerrainLayerMapLoader(imageAsset("tile-map.png"), taLoader);
-        //var tlLoader = new SimpleTerrainLayerMapLoader(imageAsset("tile-map-test-2.png"), taLoader);
-        var tlLoader = new SimpleTerrainLayerMapLoader(imageAsset("tile-map-test-3.png"), taLoader);
-        var tsBuilder = new TerrainSceneBuilder(scene);
-        $.when(
-            tgLoader.load(),
-            tlLoader.load()
-        ).done(function (tg, tl) {
-            tsBuilder.build(tg, tl);
-            terrainGeometryData = tg;
-        });
-        var allEntities = new EntityManager(scene, new SceneQuery(function (x, z) { return terrainGeometryData ? terrainGeometryData.getY(x, z) : 0.0; }));
-        allEntities.addEntity(new Entity(), EntityTypes.playerEntityType);
-
-        var personRenderer = buildSprite3dAnimator(scene)
-            .glueWalk(imageAsset("test"), { offsetY: 2 })
-            .glue(ANIM_ACTION_WAIT, new sprite3dUpdater(imageAsset("test-s-walk.png"), { frameCount: 4, offsetY: 2 }))
-            .addSpriteShadow(imageAsset("shadow.png"))
-        ;
-        var butterflyRenderer = buildSprite3dAnimator(scene)
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("butterfly.png"), { frameCount: 2, offsetY: 3, scale: 0.5 }))
-        ;
-        var treeRenderer = buildSprite3dAnimator(scene)
-            .glue(ANIM_ACTION_WAIT, new sprite3dUpdater(imageAsset("tree0.png"), { frameCount: 1, offsetY: 1, scaleX: 4, scaleY: 8 }))
-            .addSpriteShadow(imageAsset("shadow.png"))
-        ;
-        var sheepRenderer = buildSprite3dAnimator(scene)
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-ew-walk.png"), { frameCount: 2, offsetY: 1, scale: 2 }))
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-n-walk.png"), { frameCount: 2, offsetY: 1, scale: 2 }), NORTH)
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-s-walk.png"), { frameCount: 2, offsetY: 1, scale: 2 }), SOUTH)
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-nenw-walk.png"), { frameCount: 2, offsetY: 1, scale: 2, flip: 1 }), NORTH_EAST)
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-nenw-walk.png"), { frameCount: 2, offsetY: 1, scale: 2, flip: -1 }), NORTH_WEST)
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-sesw-walk.png"), { frameCount: 2, offsetY: 1, scale: 2, flip: 1 }), SOUTH_WEST)
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-sesw-walk.png"), { frameCount: 2, offsetY: 1, scale: 2, flip: -1 }), SOUTH_EAST)
-            .glue(ANIM_ACTION_WALK, new sprite3dUpdater(imageAsset("sheep-ew-walk.png"), { frameCount: 2, offsetY: 1, scale: 2, flip: -1 }), EAST)
-            .glue(ANIM_ACTION_WAIT, new sprite3dUpdater(imageAsset("sheep-ew-walk.png"), { frameCount: 2, offsetY: 1, scale: 2 }))
-            .addSpriteShadow(imageAsset("shadow.png"))
-        ;
-        var entities = new entityManager();
-        var player = entities.setPlayer(entities.add(new entity(0, 0, personRenderer, new playerControllerFactory())));
-        // var follower = entities.add(new entity(5, 0, personRenderer, new playerFollowerControllerFactory(entities)));
-        var follower = entities.add(new entity(5, 0, sheepRenderer, new playerFollowerControllerFactory(entities)));
-        entities.add(new entity(5, 20, butterflyRenderer, new playerFollowerControllerFactory(entities)));
-        entities.add(new entity(10, 20, treeRenderer, new staticControllerFactory(entities)));
-
-        //var tree = new THREE.Sprite(new THREE.SpriteMaterial({ map: THREE.ImageUtils.loadTexture(imageAsset("tree0.png")), depthTest: false, useScreenCoordinates: true }));
-        //tree.scale.set(8, 16 , 8);
-        //tree.position.set(0, 0, 0);
-        //scene.add(tree);
-        //entities.add(new entity(0, 5, personRenderer, new playerFollowerControllerFactory(entities)));
-        //entities.add(new entity(-5, 0, personRenderer, new playerFollowerControllerFactory(entities)));
-        //entities.add(new entity(-5, -5, personRenderer, new playerFollowerControllerFactory(entities)));
-        //entities.add(new entity(0, -5, personRenderer, new playerFollowerControllerFactory(entities)));
-
-        var sphereGeometry = new THREE.SphereGeometry(3, 20, 20);
-        var sphereMaterial = new THREE.MeshLambertMaterial({ color: 0x777788 });
-        var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        sphere.position.set(0, 10, 0);
-        sphere.castShadow = true;
-
-        //scene.add(sphere);
-
-        var ambientLight = new THREE.AmbientLight("#cccccc");
-        scene.add(ambientLight);
-
-        //var axes = new THREE.AxisHelper(20);
-        //scene.add(axes);
-
-        var camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
-        camera.position.set(0, 50, 10);
-        camera.lookAt(scene.position);
-
-        var cameraControls = new THREE.TrackballControls(camera);
-        cameraControls.rotateSpeed = 1.0;
-        cameraControls.zoomSpeed = 1.0;
-        cameraControls.panSpeed = 1.0;
-        cameraControls.noZoom = false;
-        cameraControls.noPan = false;
-        cameraControls.staticMoving = true;
-        cameraControls.keys = [65, 83, 68];
-
         function renderScene() {
             requestAnimationFrame(renderScene);
-            if (terrainGeometryData) {
-
-                for (var i = 0; i < entities.all.length; ++i) {
-                    var entity = entities.all[i];
-                    entity.sety(terrainGeometryData.getY(entity.x(), entity.z()));
-                    entity.update();
-                }
-
-                //for (var i = 0; i < allEntities.all.length; ++i) {
-                //    var entity = allEntities.all[i].entity;
-                //    entity.state.position.y = terrainGeometryData.getY(entity.state.position.x, entity.state.position.z);
-                //    allEntities.all[i].renderer.update();
-                //}
-                //tree.position.set(0, terrainGeometryData.getY(0, 0) + 2, 0);
-            }
-            allEntities.update();
-            sphere.position.set(player.x(), player.y() + 5, player.z());
-            //spotLight.target.position = new THREE.Vector3(player.x(), player.y(), player.z());
-            //cameraControls.update(clock.getDelta());
-            camera.position.set(player.x(), player.y() + 30, player.z() + 30);
-            camera.lookAt(new THREE.Vector3(player.x(), player.y(), player.z()));
-            renderer.render(scene, camera);
-            //renderer.autoClear = false;
-            //renderer.render(sceneOrtho, cameraOrtho);
+            game.update();
+            game.render(renderer);
         }
 
         renderScene();

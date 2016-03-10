@@ -1,71 +1,9 @@
-var LayerGroundTypePatchBuilder = (function () {
-    function LayerGroundTypePatchBuilder(width, height, layer, data) {
-        this.width = width;
-        this.height = height;
-        this.layer = layer;
-        this.data = data;
-    }
-    LayerGroundTypePatchBuilder.prototype.setGroundType = function (x, y, groundType) {
-        this.data[x + y * this.width] = groundType;
-    };
-    return LayerGroundTypePatchBuilder;
-})();
-var GroundTypePatchBuilder = (function () {
-    function GroundTypePatchBuilder(width, height) {
-        this.width = width;
-        this.height = height;
-    }
-    GroundTypePatchBuilder.prototype.buildLayer = function (layer) {
-        var layerData = new Uint8Array(this.width * this.height);
-        this.data.push(layerData);
-        return new LayerGroundTypePatchBuilder(this.width, this.height, layer, layerData);
-    };
-    GroundTypePatchBuilder.prototype.build = function () {
-        throw "not implemented";
-    };
-    return GroundTypePatchBuilder;
-})();
-var GroundTypePatch = (function () {
-    function GroundTypePatch(width, height, groundTypeLayers) {
-        this.width = width;
-        this.height = height;
-        this.groundTypeLayers = groundTypeLayers;
-    }
-    GroundTypePatch.prototype.supportsLayer = function (layer) {
-        return this.groundTypeLayers[layer] != null;
-    };
-    Object.defineProperty(GroundTypePatch.prototype, "numberOfLayers", {
-        get: function () {
-            return this.groundTypeLayers.length;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    GroundTypePatch.prototype.getGroundTypeAt = function (layer, x, y) {
-        return this.groundTypeLayers[layer][x + y * this.width];
-    };
-    return GroundTypePatch;
-})();
-var Point2d = (function () {
-    function Point2d(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-    return Point2d;
-})();
-var Quad2d = (function () {
-    function Quad2d(min, max) {
-        this.min = min;
-        this.max = max;
-    }
-    return Quad2d;
-})();
 var GroundTypeUvLookup = (function () {
     function GroundTypeUvLookup(atlas) {
         this.atlas = atlas;
     }
     GroundTypeUvLookup.prototype.getUv = function (groundType) {
-        return null;
+        throw "unimplemented";
     };
     return GroundTypeUvLookup;
 })();
@@ -110,8 +48,8 @@ var TerrainGeometryDataLoader = (function () {
                 }
             }
             //var geometry = new THREE.PlaneGeometry(width, height, widthSamples - 1, heightSamples - 1);
-            var geometry = new THREE.TerrainGeometry(width, height, widthSamples - 1, heightSamples - 1, function (x, y) { return heightData[x + y * widthSamples]; });
-            geometry.computeVertexNormals();
+            //var geometry = new THREE.TerrainGeometry(width, height, widthSamples, heightSamples, (x, y) => heightData[x + y * widthSamples]);
+            var geometry = TerrainBufferGeometry.build(width, height, widthSamples - 1, heightSamples - 1, function (x, y) { return heightData[x + y * widthSamples]; });
             return new TerrainGeometryData(geometry, width, height, widthSamples, heightSamples, function (x, y) { return heightData[x + y * widthSamples]; });
         };
     }
@@ -144,24 +82,33 @@ var AtlasUvData = (function () {
 })();
 var TerrainAtlasDataLoader = (function () {
     function TerrainAtlasDataLoader(atlasUrl, atlasUvUrl) {
-        this.loader = function () {
-            return $.when(Assets.loadImageDeferred(atlasUrl), $.getJSON(atlasUvUrl)).pipe(function (atlasImage, atlasUvData) {
-                return new TerrainAtlasData(atlasImage, atlasUvData[0]);
-            });
-        };
+        this.atlasUrl = atlasUrl;
+        this.atlasUvUrl = atlasUvUrl;
     }
     TerrainAtlasDataLoader.prototype.load = function () {
-        return this.loader();
+        return Promises.when(Assets.loadImageDeferred(this.atlasUrl), $.getJSON(this.atlasUvUrl)).pipe(function (result) {
+            return new TerrainAtlasData(result.item0, result.item1[0]);
+        });
     };
     return TerrainAtlasDataLoader;
 })();
 var TerrainLayerMapData = (function () {
-    function TerrainLayerMapData(atlasData, atlasUvTextures, atlasUvTextureWidth, atlasUvTextureHeight) {
+    function TerrainLayerMapData(atlasData, atlasUvTextures, layerMap, atlasUvTextureWidth, atlasUvTextureHeight) {
         this.atlasData = atlasData;
         this.atlasUvTextures = atlasUvTextures;
+        this.layerMap = layerMap;
         this.atlasUvTextureWidth = atlasUvTextureWidth;
         this.atlasUvTextureHeight = atlasUvTextureHeight;
     }
+    TerrainLayerMapData.prototype.createPatch = function (x, y, w, h) {
+        var layerMapCanvas = document.createElement("canvas");
+        layerMapCanvas.width = w;
+        layerMapCanvas.height = h;
+        var layerMapContext = layerMapCanvas.getContext("2d");
+        layerMapContext.drawImage(this.layerMap, x, y, w, h);
+        var layerMapImageData = layerMapContext.getImageData(0, 0, w, h);
+        return null;
+    };
     return TerrainLayerMapData;
 })();
 var ColourToTerrainType = (function () {
@@ -173,101 +120,13 @@ var ColourToTerrainType = (function () {
     return ColourToTerrainType;
 })();
 var SimpleTerrainLayerMapLoader = (function () {
-    function SimpleTerrainLayerMapLoader(layerMapUrl, atlasLoader) {
+    function SimpleTerrainLayerMapLoader(layerMapUrl, atlasData) {
+        this.layerMapUrl = layerMapUrl;
+        this.atlasData = atlasData;
         this.colourToType = new Array();
         this.colourToType.push({ colour: 0xffffff, type: 0, layer: 0 }); //    TS structural type magic
         this.colourToType.push({ colour: 0xff0000, type: 1, layer: 0 });
         this.colourToType.push({ colour: 0x000000, type: 2, layer: 1 });
-        var _this = this;
-        this.loader = function () {
-            return $.when(Assets.loadImageDeferred(layerMapUrl), atlasLoader.load())
-                .pipe(function (layerMap, atlasData) {
-                var emptyTileUv = 0;
-                var tileSize = atlasData.atlasUvData.tileSize;
-                var tileSize2 = tileSize * tileSize;
-                var tileInfoToUvOffset = function (info) {
-                    //  UV for a tile is expressed as a multiple of the basic tile width/height (32)
-                    //  To cram into a 1 byte colour component, we divide through by the tile dimensions to get a tile offset
-                    return (info.u / tileSize) + (info.v * atlasData.atlasImage.naturalWidth) / tileSize2;
-                };
-                var mainTileUv = function (type) {
-                    return tileInfoToUvOffset(atlasData.atlasUvData.tileSets[type].baseTileInfo);
-                };
-                var cornerTileUv = function (type, mask) {
-                    if (mask == -1) {
-                        return mainTileUv(type);
-                    }
-                    if (mask == 0) {
-                        return emptyTileUv;
-                    }
-                    return tileInfoToUvOffset(atlasData.atlasUvData.tileSets[type].cornerTransitionTileInfos[mask - 1]);
-                };
-                var setCornerTileUv = function (atlasUvData, atlasUvOffset, type, mask) {
-                    if (atlasUvData[atlasUvOffset] == emptyTileUv) {
-                        atlasUvData[atlasUvOffset] = cornerTileUv(type, mask);
-                    }
-                };
-                var edgeTileUv = function (type, mask) {
-                    if (mask == 0) {
-                        return emptyTileUv;
-                    }
-                    return tileInfoToUvOffset(atlasData.atlasUvData.tileSets[type].edgeTransitionTileInfos[mask - 1]);
-                };
-                var setEdgeTileUv = function (atlasUvData, atlasUvOffset, type, mask) {
-                    if (atlasUvData[atlasUvOffset] == emptyTileUv) {
-                        atlasUvData[atlasUvOffset] = edgeTileUv(type, mask);
-                    }
-                };
-                //  Build the atlas corner lookup texture
-                //  R = layer 0 edge offset (u,v) = (R % atlasWidth, R / atlasWidth)
-                //  G = layer 0 corner offset (u,v) = (G % atlasWidth, G / atlasWidth)
-                //  B = layer 1 corner offset (u,v) = (B % atlasWidth, B / atlasWidth)
-                //  A = layer 1 edge offset (u,v) = (A % atlasWidth, A / atlasWidth)
-                //  Can't create a texture direct from processing a canvas with the ground map drawn to it as CANVAS PREMULTIPLIES THE FUCKING ALPHA
-                var maxLayers = 2;
-                var atlasUvTextures = [];
-                for (var layer = 0; layer < maxLayers; layer += 2) {
-                    var currentLayer = layer;
-                    var typesOnLayer0 = _this.colourToType.filter(function (ct) { return ct.layer == currentLayer; });
-                    var typesOnLayer1 = _this.colourToType.filter(function (ct) { return ct.layer == currentLayer + 1; });
-                    var atlasUvData = new Uint8Array(layerMap.naturalWidth * layerMap.naturalHeight * 4);
-                    var maxIdx = layerMap.naturalWidth * layerMap.naturalHeight * 4;
-                    var layerMapCanvas = document.createElement("canvas");
-                    var layerMapContext = canvasImage(layerMapCanvas, layerMap, layerMap.naturalWidth, layerMap.naturalHeight);
-                    var layerMapImageData = layerMapContext.getImageData(0, 0, layerMapCanvas.width, layerMapCanvas.height);
-                    var w = layerMapCanvas.width;
-                    var h = layerMapCanvas.height;
-                    var d = layerMapImageData.data;
-                    var idx = 0;
-                    for (var y = 0; y < h; ++y) {
-                        for (var x = 0; x < w; ++x, idx += 4) {
-                            for (var typeIndex = 0; typeIndex < typesOnLayer0.length; ++typeIndex) {
-                                var type = typesOnLayer0[typeIndex].type;
-                                //DEBUG ONLY
-                                if (_this.getGroundTypeFromColourXy(d, x, y, w, h).type != type) {
-                                    continue;
-                                }
-                                setCornerTileUv(atlasUvData, idx + 0, type, _this.determineTerrainTypeCornerMask(d, x, y, w, h, type, layer + 0));
-                                setEdgeTileUv(atlasUvData, idx + 1, type, _this.determineTerrainTypeEdgeMask(d, x, y, w, h, type, layer + 0));
-                            }
-                            for (var typeIndex = 0; typeIndex < typesOnLayer1.length; ++typeIndex) {
-                                var type = typesOnLayer1[typeIndex].type;
-                                setCornerTileUv(atlasUvData, idx + 2, type, _this.determineTerrainTypeCornerMask(d, x, y, w, h, type, layer + 1));
-                                setEdgeTileUv(atlasUvData, idx + 3, type, _this.determineTerrainTypeEdgeMask(d, x, y, w, h, type, layer + 1));
-                            }
-                        }
-                    }
-                    var atlasUvLayerTexture = new THREE.DataTexture(atlasUvData, layerMap.naturalWidth, layerMap.naturalHeight, THREE.RGBAFormat);
-                    atlasUvLayerTexture.wrapS = THREE.RepeatWrapping;
-                    atlasUvLayerTexture.wrapT = THREE.RepeatWrapping;
-                    atlasUvLayerTexture.minFilter = THREE.NearestFilter;
-                    atlasUvLayerTexture.magFilter = THREE.NearestFilter;
-                    atlasUvLayerTexture.needsUpdate = true;
-                    atlasUvTextures.push(atlasUvLayerTexture);
-                }
-                return new TerrainLayerMapData(atlasData, atlasUvTextures, layerMap.naturalWidth, layerMap.naturalHeight);
-            });
-        };
     }
     SimpleTerrainLayerMapLoader.prototype.getTypeFromColour = function (data, idx) {
         var colour = (data[idx] << 16) | (data[idx + 1] << 8) | data[idx + 2];
@@ -316,134 +175,223 @@ var SimpleTerrainLayerMapLoader = (function () {
         //return 0;
     };
     SimpleTerrainLayerMapLoader.prototype.load = function () {
-        return this.loader();
-    };
+        var _this = this;
+        return Assets.loadImageDeferred(this.layerMapUrl)
+            .then(function (layerMap) {
+            var emptyTileUv = 0;
+            var tileSize = _this.atlasData.atlasUvData.tileSize;
+            var tileSize2 = tileSize * tileSize;
+            var __this = _this;
+            var tileInfoToUvOffset = function (info) {
+                //  UV for a tile is expressed as a multiple of the basic tile width/height (32)
+                //  To cram into a 1 byte colour component, we divide through by the tile dimensions to get a tile offset
+                return (info.u / tileSize) + (info.v * __this.atlasData.atlasImage.naturalWidth) / tileSize2;
+            };
+            var mainTileUv = function (type) {
+                return tileInfoToUvOffset(__this.atlasData.atlasUvData.tileSets[type].baseTileInfo);
+            };
+            var cornerTileUv = function (type, mask) {
+                if (mask == -1) {
+                    return mainTileUv(type);
+                }
+                if (mask == 0) {
+                    return emptyTileUv;
+                }
+                return tileInfoToUvOffset(__this.atlasData.atlasUvData.tileSets[type].cornerTransitionTileInfos[mask - 1]);
+            };
+            var setCornerTileUv = function (atlasUvData, atlasUvOffset, type, mask) {
+                if (atlasUvData[atlasUvOffset] == emptyTileUv) {
+                    atlasUvData[atlasUvOffset] = cornerTileUv(type, mask);
+                }
+            };
+            var edgeTileUv = function (type, mask) {
+                if (mask == 0) {
+                    return emptyTileUv;
+                }
+                return tileInfoToUvOffset(__this.atlasData.atlasUvData.tileSets[type].edgeTransitionTileInfos[mask - 1]);
+            };
+            var setEdgeTileUv = function (atlasUvData, atlasUvOffset, type, mask) {
+                if (atlasUvData[atlasUvOffset] == emptyTileUv) {
+                    atlasUvData[atlasUvOffset] = edgeTileUv(type, mask);
+                }
+            };
+            //  Build the atlas corner lookup texture
+            //  R = layer 0 edge offset (u,v) = (R % atlasWidth, R / atlasWidth)
+            //  G = layer 0 corner offset (u,v) = (G % atlasWidth, G / atlasWidth)
+            //  B = layer 1 corner offset (u,v) = (B % atlasWidth, B / atlasWidth)
+            //  A = layer 1 edge offset (u,v) = (A % atlasWidth, A / atlasWidth)
+            //  Can't create a texture direct from processing a canvas with the ground map drawn to it as CANVAS PREMULTIPLIES THE FUCKING ALPHA
+            var maxLayers = 2;
+            var atlasUvTextures = [];
+            var layerMapCanvas = document.createElement("canvas");
+            var layerMapContext = canvasImage(layerMapCanvas, layerMap, layerMap.naturalWidth, layerMap.naturalHeight);
+            var layerMapImageData = layerMapContext.getImageData(0, 0, layerMapCanvas.width, layerMapCanvas.height);
+            var w = layerMapCanvas.width;
+            var h = layerMapCanvas.height;
+            var d = layerMapImageData.data;
+            for (var layer = 0; layer < maxLayers; layer += 2) {
+                var currentLayer = layer;
+                var typesOnLayer0 = _this.colourToType.filter(function (ct) { return ct.layer == currentLayer; });
+                var typesOnLayer1 = _this.colourToType.filter(function (ct) { return ct.layer == currentLayer + 1; });
+                var atlasUvData = new Uint8Array(layerMap.naturalWidth * layerMap.naturalHeight * 4);
+                var maxIdx = layerMap.naturalWidth * layerMap.naturalHeight * 4;
+                var idx = 0;
+                for (var y = 0; y < h; ++y) {
+                    for (var x = 0; x < w; ++x, idx += 4) {
+                        for (var typeIndex = 0; typeIndex < typesOnLayer0.length; ++typeIndex) {
+                            var type = typesOnLayer0[typeIndex].type;
+                            //DEBUG ONLY
+                            if (_this.getGroundTypeFromColourXy(d, x, y, w, h).type != type) {
+                                continue;
+                            }
+                            setCornerTileUv(atlasUvData, idx + 0, type, _this.determineTerrainTypeCornerMask(d, x, y, w, h, type, layer + 0));
+                            setEdgeTileUv(atlasUvData, idx + 1, type, _this.determineTerrainTypeEdgeMask(d, x, y, w, h, type, layer + 0));
+                        }
+                        for (var typeIndex = 0; typeIndex < typesOnLayer1.length; ++typeIndex) {
+                            var type = typesOnLayer1[typeIndex].type;
+                            setCornerTileUv(atlasUvData, idx + 2, type, _this.determineTerrainTypeCornerMask(d, x, y, w, h, type, layer + 1));
+                            setEdgeTileUv(atlasUvData, idx + 3, type, _this.determineTerrainTypeEdgeMask(d, x, y, w, h, type, layer + 1));
+                        }
+                    }
+                }
+                var atlasUvLayerTexture = new THREE.DataTexture(atlasUvData, layerMap.naturalWidth, layerMap.naturalHeight, THREE.RGBAFormat);
+                atlasUvLayerTexture.wrapS = THREE.RepeatWrapping;
+                atlasUvLayerTexture.wrapT = THREE.RepeatWrapping;
+                atlasUvLayerTexture.minFilter = THREE.NearestFilter;
+                atlasUvLayerTexture.magFilter = THREE.NearestFilter;
+                atlasUvLayerTexture.needsUpdate = true;
+                atlasUvTextures.push(atlasUvLayerTexture);
+            }
+            return new TerrainLayerMapData(_this.atlasData, atlasUvTextures, layerMap, layerMap.naturalWidth, layerMap.naturalHeight);
+        });
+    }; //load
     return SimpleTerrainLayerMapLoader;
 })();
 var TerrainSceneBuilder = (function () {
     function TerrainSceneBuilder(scene) {
-        this.builder = function (td, tl, ta) {
-            //  Build the atlas texture
-            var atlasTexture = new THREE.Texture(tl.atlasData.atlasImage);
-            atlasTexture.wrapS = THREE.RepeatWrapping;
-            atlasTexture.wrapT = THREE.RepeatWrapping;
-            atlasTexture.minFilter = THREE.NearestFilter;
-            atlasTexture.magFilter = THREE.NearestFilter;
-            atlasTexture.flipY = false;
-            atlasTexture.needsUpdate = true;
-            ////  Build atlas UV lookup texture to make it easier to retrieve tile offsets
-            //var atlasUvLookupTextureData = new Uint8Array(4 * 256);
-            //for (var i = 0; i < ta.atlasUvData.
-            //var atlasUvLookupTexture = new THREE.DataTexture(atlasUvLookupTextureData, 256, 1, THREE.RGBAFormat);
-            //atlasUvLookupTexture.minFilter = THREE.NearestFilter;
-            //atlasUvLookupTexture.magFilter = THREE.NearestFilter;
-            //atlasUvLookupTexture.needsUpdate = true;
-            //  Create the terrain shader
-            var uniforms = {
-                atlasTexture: { type: "t", value: atlasTexture }
-            };
-            var atlasUvTextureNames = new Array();
-            for (var i = 0; i < tl.atlasUvTextures.length; ++i) {
-                uniforms["atlasUvTexture" + i] = { type: "t", value: tl.atlasUvTextures[i] };
-                atlasUvTextureNames.push("atlasUvTexture" + i);
-                atlasUvTextureNames.push("atlasUvTexture" + i);
-            }
-            var vshader = [
-                "varying vec3 vecNormal;",
-                "varying vec2 vUv;",
-                "void main() {",
-                "vec4 worldPosition = modelMatrix * vec4( position, 1.0 );",
-                "vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
-                "vecNormal = normalize(normalMatrix * normal);",
-                "vUv = uv;",
-                "gl_Position = projectionMatrix * mvPosition;",
-                "}"
-            ].join("\n");
-            var fshader = [
-                "varying vec3 vecNormal;",
-                "uniform vec3 directionalLightDirection;",
-                "uniform sampler2D atlasTexture;",
-                "uniform sampler2D atlasUvTexture0;",
-                "varying vec2 vUv;",
-                "const float aw = float(" + tl.atlasData.atlasImage.naturalWidth + ");",
-                "const float atlasTileWidth = float(" + (tl.atlasData.atlasImage.naturalWidth / (256.0 * 32.0)) + ");",
-                "const float atlasU = " + 1.0 / tl.atlasData.atlasImage.naturalWidth + ";",
-                "const float atlasV = " + 1.0 / tl.atlasData.atlasImage.naturalHeight + ";",
-                "const float atlasTileU = " + 32.0 / tl.atlasData.atlasImage.naturalWidth + ";",
-                "const float atlasTileV = " + 32.0 / tl.atlasData.atlasImage.naturalHeight + ";",
-                "const float atlasTileUx = " + 31.0 / tl.atlasData.atlasImage.naturalWidth + ";",
-                "const float atlasTileVx = " + 31.0 / tl.atlasData.atlasImage.naturalHeight + ";",
-                "const float atlasUvUoff = float(" + 0.5 / tl.atlasUvTextureWidth + ");",
-                "const float atlasUvVoff = float(" + 0.5 / tl.atlasUvTextureHeight + ");",
-                "const float tileResolution = 64.0;",
-                "const float tileResolutionUvOffset = 0.5 / tileResolution;",
-                THREE.ShaderChunk['common'],
-                THREE.ShaderChunk["shadowmap_pars_fragment"],
-                "void main() {", "vec2 mapUv = vUv;",
-                "vec2 uv = (vUv * tileResolution) + vec2(tileResolutionUvOffset, tileResolutionUvOffset);",
-                "vec2 uvoff = ((uv - floor(uv)) * vec2(atlasTileUx, atlasTileVx));",
-                "float ralpha = 1.0;",
-                "vec4 groundColour = vec4(0, 0, 0, 0);",
-                (function () {
-                    return atlasUvTextureNames
-                        .reverse()
-                        .map(function (texName, idx0) {
-                        var idx = atlasUvTextureNames.length - (idx0 + 1);
-                        var layerUvsVar = "layer" + idx + "Uvs";
-                        var layerCornerUvOffsetExpr = layerUvsVar + (idx % 2 == 0 ? ".r" : ".b");
-                        var layerEdgeUvOffsetExpr = layerUvsVar + (idx % 2 == 0 ? ".g" : ".a");
-                        var layerCornerUvVar = "layer" + idx + "CornerUv";
-                        var layerEdgeUvVar = "layer" + idx + "EdgeUv";
-                        var layerColourVar = "layer" + idx + "Colour";
-                        var setup = [
-                            "vec4 " + layerUvsVar + " = texture2D(" + texName + ", mapUv);",
-                            "vec2 " + layerCornerUvVar + " = vec2(mod(" + layerCornerUvOffsetExpr + "*32.0*255.0, aw)*atlasU, floor((" + layerCornerUvOffsetExpr + "*32.5*255.0)/aw)*atlasTileV) + uvoff;",
-                            "vec2 " + layerEdgeUvVar + " = vec2(mod(" + layerEdgeUvOffsetExpr + "*32.0*255.0, aw)*atlasU, floor((" + layerEdgeUvOffsetExpr + "*32.0*255.0)/aw)*atlasTileV) + uvoff;",
-                            "vec4 " + layerColourVar + " = max(texture2D(atlasTexture, " + layerCornerUvVar + "), texture2D(atlasTexture, " + layerEdgeUvVar + ")) * ralpha;",
-                        ];
-                        if (idx > 0) {
-                            setup = setup.concat([
-                                "groundColour += vec4(" + layerColourVar + ".rgb*" + layerColourVar + ".a, " + layerColourVar + ".a);",
-                                "ralpha -= " + layerColourVar + ".a;"
-                            ]);
-                        }
-                        else {
-                            setup = setup.concat([
-                                "groundColour += " + layerColourVar + ";"
-                            ]);
-                        }
-                        return setup.join("\n");
-                    }).join("\n");
-                })(),
-                "vec4 clayer = groundColour;",
-                "gl_FragColor = clayer * (0.25 + max(0.0, dot(vecNormal, directionalLightDirection) * 0.75));",
-                "}"
-            ].join("\n");
-            var lightUniforms = THREE.UniformsLib['lights'];
-            for (var property in lightUniforms) {
-                uniforms[property] = lightUniforms[property];
-            }
-            var shadowUniforms = THREE.UniformsLib["shadowmap"];
-            for (var property in shadowUniforms) {
-                uniforms[property] = shadowUniforms[property];
-            }
-            var groundMaterial = new THREE.ShaderMaterial({
-                uniforms: uniforms,
-                vertexShader: vshader,
-                fragmentShader: fshader,
-                lights: true
-            });
-            var ground = new THREE.Mesh(td.geometry, groundMaterial);
-            //ground.rotation.x = -0.5 * Math.PI;
-            //ground.position.set(0, 0, 0);
-            ground.uvsNeedUpdate = true;
-            //ground.castShadow = true;
-            ground.receiveShadow = true;
-            scene.add(ground);
-        };
+        this.scene = scene;
     }
-    TerrainSceneBuilder.prototype.build = function (td, tl, ta) {
-        this.builder(td, tl, ta);
+    TerrainSceneBuilder.prototype.build = function (td, tl) {
+        //  Build the atlas texture
+        this.atlasImage = tl.atlasData.atlasImage;
+        var atlasTexture = new THREE.Texture(this.atlasImage);
+        atlasTexture.wrapS = THREE.RepeatWrapping;
+        atlasTexture.wrapT = THREE.RepeatWrapping;
+        atlasTexture.minFilter = THREE.NearestFilter;
+        atlasTexture.magFilter = THREE.NearestFilter;
+        atlasTexture.flipY = false;
+        atlasTexture.needsUpdate = true;
+        ////  Build atlas UV lookup texture to make it easier to retrieve tile offsets
+        //var atlasUvLookupTextureData = new Uint8Array(4 * 256);
+        //for (var i = 0; i < ta.atlasUvData.
+        //var atlasUvLookupTexture = new THREE.DataTexture(atlasUvLookupTextureData, 256, 1, THREE.RGBAFormat);
+        //atlasUvLookupTexture.minFilter = THREE.NearestFilter;
+        //atlasUvLookupTexture.magFilter = THREE.NearestFilter;
+        //atlasUvLookupTexture.needsUpdate = true;
+        //  Create the terrain shader
+        var uniforms = {
+            atlasTexture: { type: "t", value: atlasTexture }
+        };
+        var atlasUvTextureNames = new Array();
+        for (var i = 0; i < tl.atlasUvTextures.length; ++i) {
+            uniforms["atlasUvTexture" + i] = { type: "t", value: tl.atlasUvTextures[i] };
+            atlasUvTextureNames.push("atlasUvTexture" + i);
+            atlasUvTextureNames.push("atlasUvTexture" + i);
+        }
+        var vshader = [
+            "varying vec3 vecNormal;",
+            "varying vec2 vUv;",
+            "void main() {",
+            "vec4 worldPosition = modelMatrix * vec4( position, 1.0 );",
+            "vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
+            "vecNormal = normalize(normalMatrix * normal);",
+            "vUv = uv;",
+            "gl_Position = projectionMatrix * mvPosition;",
+            "}"
+        ].join("\n");
+        var fshader = [
+            "varying vec3 vecNormal;",
+            "uniform vec3 directionalLightDirection;",
+            "uniform sampler2D atlasTexture;",
+            "uniform sampler2D atlasUvTexture0;",
+            "varying vec2 vUv;",
+            "const float aw = float(" + tl.atlasData.atlasImage.naturalWidth + ");",
+            "const float atlasTileWidth = float(" + (tl.atlasData.atlasImage.naturalWidth / (256.0 * 32.0)) + ");",
+            "const float atlasU = " + 1.0 / tl.atlasData.atlasImage.naturalWidth + ";",
+            "const float atlasV = " + 1.0 / tl.atlasData.atlasImage.naturalHeight + ";",
+            "const float atlasTileU = " + 32.0 / tl.atlasData.atlasImage.naturalWidth + ";",
+            "const float atlasTileV = " + 32.0 / tl.atlasData.atlasImage.naturalHeight + ";",
+            "const float atlasTileUx = " + 31.0 / tl.atlasData.atlasImage.naturalWidth + ";",
+            "const float atlasTileVx = " + 31.0 / tl.atlasData.atlasImage.naturalHeight + ";",
+            "const float atlasUvUoff = float(" + 0.5 / tl.atlasUvTextureWidth + ");",
+            "const float atlasUvVoff = float(" + 0.5 / tl.atlasUvTextureHeight + ");",
+            "const float tileResolution = 128.0;",
+            "const float tileResolutionUvOffset = 0.5 / tileResolution;",
+            THREE.ShaderChunk['common'],
+            THREE.ShaderChunk["shadowmap_pars_fragment"],
+            "void main() {",
+            "vec2 mapUv = vUv;",
+            "vec2 uv = (vUv * tileResolution) + vec2(tileResolutionUvOffset, tileResolutionUvOffset);",
+            "vec2 uvoff = ((uv - floor(uv)) * vec2(atlasTileUx, atlasTileVx));",
+            "float ralpha = 1.0;",
+            "vec4 groundColour = vec4(0, 0, 0, 0);",
+            (function () {
+                return atlasUvTextureNames
+                    .reverse()
+                    .map(function (texName, idx0) {
+                    var idx = atlasUvTextureNames.length - (idx0 + 1);
+                    var layerUvsVar = "layer" + idx + "Uvs";
+                    var layerCornerUvOffsetExpr = layerUvsVar + (idx % 2 == 0 ? ".r" : ".b");
+                    var layerEdgeUvOffsetExpr = layerUvsVar + (idx % 2 == 0 ? ".g" : ".a");
+                    var layerCornerUvVar = "layer" + idx + "CornerUv";
+                    var layerEdgeUvVar = "layer" + idx + "EdgeUv";
+                    var layerColourVar = "layer" + idx + "Colour";
+                    var setup = [
+                        "vec4 " + layerUvsVar + " = texture2D(" + texName + ", mapUv);",
+                        "vec2 " + layerCornerUvVar + " = vec2(mod(" + layerCornerUvOffsetExpr + "*32.0*255.0, aw)*atlasU, floor((" + layerCornerUvOffsetExpr + "*32.5*255.0)/aw)*atlasTileV) + uvoff;",
+                        "vec2 " + layerEdgeUvVar + " = vec2(mod(" + layerEdgeUvOffsetExpr + "*32.0*255.0, aw)*atlasU, floor((" + layerEdgeUvOffsetExpr + "*32.0*255.0)/aw)*atlasTileV) + uvoff;",
+                        "vec4 " + layerColourVar + " = max(texture2D(atlasTexture, " + layerCornerUvVar + "), texture2D(atlasTexture, " + layerEdgeUvVar + ")) * ralpha;",
+                    ];
+                    if (idx > 0) {
+                        setup = setup.concat([
+                            "groundColour += vec4(" + layerColourVar + ".rgb*" + layerColourVar + ".a, " + layerColourVar + ".a);",
+                            "ralpha -= " + layerColourVar + ".a;"
+                        ]);
+                    }
+                    else {
+                        setup = setup.concat([
+                            "groundColour += " + layerColourVar + ";"
+                        ]);
+                    }
+                    return setup.join("\n");
+                }).join("\n");
+            })(),
+            "vec4 clayer = groundColour;",
+            "gl_FragColor = clayer * (0.25 + max(0.0, dot(vecNormal, directionalLightDirection) * 0.75));",
+            "}"
+        ].join("\n");
+        var lightUniforms = THREE.UniformsLib['lights'];
+        for (var property in lightUniforms) {
+            uniforms[property] = lightUniforms[property];
+        }
+        var shadowUniforms = THREE.UniformsLib["shadowmap"];
+        for (var property in shadowUniforms) {
+            uniforms[property] = shadowUniforms[property];
+        }
+        var groundMaterial = new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: vshader,
+            fragmentShader: fshader,
+            lights: true
+        });
+        var ground = new THREE.Mesh(td.geometry, groundMaterial);
+        //ground.rotation.x = -0.5 * Math.PI;
+        //ground.position.set(0, 0, 0);
+        ground.uvsNeedUpdate = true;
+        //ground.castShadow = true;
+        ground.receiveShadow = true;
+        this.scene.add(ground);
     };
     return TerrainSceneBuilder;
 })();
+//# sourceMappingURL=terrainDataLoader.js.map

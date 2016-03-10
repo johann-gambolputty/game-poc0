@@ -1,3 +1,19 @@
+var Rect = (function () {
+    function Rect(minx, miny, width, height) {
+        this.minx = minx;
+        this.miny = miny;
+        this.width = width;
+        this.height = height;
+    }
+    return Rect;
+})();
+var Vector2d = (function () {
+    function Vector2d(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    return Vector2d;
+})();
 var Vector3d = (function () {
     function Vector3d(x, y, z) {
         if (x === void 0) { x = 0; }
@@ -21,12 +37,11 @@ var Vector3d = (function () {
         return sd < 0.00000001 ? 0.0 : Math.sqrt(sd);
     };
     Vector3d.prototype.squaredLength = function () {
-        return this.x * this.y + this.y * this.y + this.z * this.z;
+        return this.x * this.x + this.y * this.y + this.z * this.z;
     };
     Vector3d.prototype.length = function () {
         var sl = this.squaredLength();
         return sl < 0.000000001 ? 0.0 : Math.sqrt(sl);
-        ;
     };
     Vector3d.prototype.dot = function (v) {
         return this.x * v.x + this.y * v.y + this.z * v.z;
@@ -37,5 +52,13 @@ var Vector3d = (function () {
     Vector3d.prototype.add = function (v) {
         return new Vector3d(this.x + v.x, this.y + v.y, this.z + v.z);
     };
+    Vector3d.prototype.mul = function (s) {
+        return new Vector3d(this.x * s, this.y * s, this.z * s);
+    };
+    Vector3d.origin = new Vector3d(0, 0, 0);
+    Vector3d.xaxis = new Vector3d(1, 0, 0);
+    Vector3d.yaxis = new Vector3d(0, 1, 0);
+    Vector3d.zaxis = new Vector3d(0, 0, 1);
     return Vector3d;
 })();
+//# sourceMappingURL=geom.js.map

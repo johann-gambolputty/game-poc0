@@ -8,7 +8,7 @@ namespace GameLib.World
         private readonly IGameWorldSimulator _simulator;
         private readonly GameWorld _world;
         private readonly IGameWorldPublisher _publisher;
-
+        
         public GameWorldController(GameWorld world, Func<GameWorld, IGameWorldSimulator> simulatorFactory, IGameWorldPublisher publisher)
         {
             _world = world;

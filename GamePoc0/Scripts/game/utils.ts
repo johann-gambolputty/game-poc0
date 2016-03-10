@@ -1,6 +1,44 @@
 ﻿
-declare var $: any;
+//declare var $: any;
 declare var THREE: any;
+
+module Tuple {
+    export function create<T0, T1>(item0: T0, item1: T1): Tuple2<T0, T1>;
+    export function create<T0, T1, T2>(item0: T0, item1: T1, item2: T2): Tuple3<T0, T1, T2>;
+    
+    export function create(item0, item1, item2?): any {
+        if (typeof item2 === 'undefined') {
+            return new Tuple2(item0, item1);
+        }
+        return new Tuple3(item0, item1, item2);
+    }
+}
+
+class Tuple2<T0, T1> {
+    constructor(public item0: T0, public item1: T1) { }
+}
+
+class Tuple3<T0, T1, T2> {
+    constructor(public item0: T0, public item1: T1, public item2: T2) { }
+}
+
+module Promises {
+    export function when<X, Y>(p0: JQueryPromise<X>, p1: JQueryPromise<Y>): JQueryPromise<Tuple2<X, Y>> {
+        var p = $.Deferred<Tuple2<X, Y>>();
+        $.when(<JQueryPromise<any>>p0, <JQueryPromise<any>>p1)
+            .then((x,y) => {
+                    p.resolve(Tuple.create(<X>x, <Y>y));
+                },
+                x => {
+                    p.fail();
+                },
+                x => {
+                    p.progress();
+                }
+            );
+        return p.promise();
+    }
+}
 
 function coalesceProperty<TIn, TOut>(get: (o: TIn) => TOut, ...objs: Array<TIn>) {
     for (var o of objs) {
