@@ -33,6 +33,7 @@
 <script src="~/Scripts/game/gameTraits.js"></script>
 <script src="~/Scripts/game/terrainDecal.js"></script>
 <script src="~/Scripts/game/terrainBufferGeometry.js"></script>
+<script src="~/Scripts/game/net.js"></script>
 <!--
 <script src="~/Scripts/game/keys.js"></script>
 <script src="~/Scripts/game/terrainLoader2.js"></script>
@@ -44,13 +45,12 @@
 <script src="~/signalr/hubs"></script>
 <script type="text/javascript">
 
-    $(document).ready(function () {
-
-        var chat = $.connection.gameHub;
-        chat.client.worldUpdate = function (updates) {
-            console.log("holy shit i got an update: " + updates);
+    function createGameHub(gc) {
+        var hub = $.connection.gameHub;
+        hub.client.worldUpdate = function (updates) {
+            gc.processUpdate(updates);
         };
-        chat.client.broadcastMessage = function (name, message) {
+        hub.client.broadcastMessage = function (name, message) {
             // Html encode display name and message.
             var encodedName = $('<div />').text(name).html();
             var encodedMsg = $('<div />').text(message).html();
@@ -68,10 +68,13 @@
                 $('#message').val('').focus();
             });
         });
+    }
 
+    $(document).ready(function () {
 
         var container = document.getElementById("mainCanvasContainer");
         var game = Bootstrap.setup(container);
+        var hub = createGameHub(game);
 
         var clock = new THREE.Clock();
         var renderer = new THREE.WebGLRenderer();

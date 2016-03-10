@@ -9,7 +9,8 @@ var EntityState = (function () {
     return EntityState;
 })();
 var Entity = (function () {
-    function Entity() {
+    function Entity(id) {
+        this.id = id;
         this.traits = new TraitContainer();
         this.state = new EntityState(Vector3d.origin, 0);
     }
@@ -24,7 +25,12 @@ var EntityManager = (function () {
         this.scene = scene;
         this.gc = gc;
         this.all = [];
+        this.byId = {};
     }
+    EntityManager.prototype.entityById = function (id) {
+        var record = this.byId[id];
+        return Maybe.to(record).map(function (r) { return r.entity; });
+    };
     EntityManager.prototype.first = function (predicate) {
         for (var i = 0; i < this.all.length; ++i) {
             if (predicate(this.all[i].entity)) {
@@ -33,10 +39,12 @@ var EntityManager = (function () {
         }
         return Maybe.empty();
     };
-    EntityManager.prototype.addEntity = function (entityType) {
-        var entity = new Entity();
+    EntityManager.prototype.addEntity = function (entityType, id) {
+        var entity = new Entity(id);
         entity.traits = entityType.defaultTraits.build();
-        this.all.push({ entity: entity, type: entityType, renderer: entityType.rendererFactory.create(this.scene, entity), controller: entityType.controllerFactory.create(entity, this.gc) });
+        var entityRecord = { entity: entity, type: entityType, renderer: entityType.rendererFactory.create(this.scene, entity), controller: entityType.controllerFactory.create(entity, this.gc) };
+        this.all.push(entityRecord);
+        this.byId[entityRecord.entity.id] = entityRecord;
         return entity;
     };
     EntityManager.prototype.update = function () {
@@ -48,11 +56,12 @@ var EntityManager = (function () {
     return EntityManager;
 })();
 var EntityType = (function () {
-    function EntityType(cf, rf, defaultTraits) {
+    function EntityType(id, name, cf, rf, defaultTraits) {
+        this.id = id;
+        this.name = name;
         this.defaultTraits = defaultTraits;
         this.controllerFactory = { create: cf };
         this.rendererFactory = { create: rf };
     }
     return EntityType;
 })();
-//# sourceMappingURL=entities.js.map

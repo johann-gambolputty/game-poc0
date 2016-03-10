@@ -1,8 +1,6 @@
 ﻿
-using System;
+using GameLib.Maths;
 using GameLib.World.Shared;
-using GameLib.World;
-using System.Collections.Generic;
 
 namespace GameLib.World
 {
@@ -11,6 +9,10 @@ namespace GameLib.World
         int Id { get; }
 
         IEntityType EntityType { get; }
+
+        IntPoint3d Pos { get; set; }
+
+        double Facing { get; set; }
 
         ISharedEntity ToShared();
     }
@@ -36,9 +38,13 @@ namespace GameLib.World
             get; private set;
         }
 
+        public IntPoint3d Pos { get; set; }
+
+        public double Facing { get; set; }
+
         public ISharedEntity ToShared()
         {
-            return new SharedEntity(Id, EntityType.Id);
+            return new SharedEntity(Id, EntityType.Id) { Position = Pos };
         }
     }
 }

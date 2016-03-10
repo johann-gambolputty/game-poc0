@@ -380,6 +380,7 @@
     <TypeScriptCompile Include="Scripts\game\gameTraits.ts" />
     <TypeScriptCompile Include="Scripts\game\geom.ts" />
     <TypeScriptCompile Include="Scripts\game\keyStates.ts" />
+    <TypeScriptCompile Include="Scripts\game\net.ts" />
     <TypeScriptCompile Include="Scripts\game\sceneQuery.ts" />
     <TypeScriptCompile Include="Scripts\game\spriteAnimation.ts" />
     <TypeScriptCompile Include="Scripts\game\sprites.ts" />

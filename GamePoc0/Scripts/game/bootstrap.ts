@@ -1,10 +1,64 @@
 ﻿
 interface IGame {
+    processUpdate(update: NetCode.SharedWorldSyncActions);
     update();
     render(renderer: any);
 }
 
 module Bootstrap {
+
+    class BsEntityTypes extends EntityTypes {
+        public playerEntityType: IEntityType;
+        public followerEntityType: IEntityType;
+        public sheepEntityType: IEntityType;
+        public treeEntityType: IEntityType;
+        
+        private trackHeight(controller:IEntityController) {
+            return new HeightEntityContoller(controller, this.gc.traits().safeTrait(GameTraits.SceneQueryTraitType).getHeight);
+        }
+
+        constructor(private gc: IGameContext) {
+            super();
+            var defaultShadowUrl = Assets.imageAsset("shadow.png");
+            var defaultPixelScale = 0.1;//  Pixel to world size factor (e.g. 32x32 spite with scale of 0.1 is 3.2m x 3.2m, assuming world units are metres)
+            var personAnimator = createAnimationBuilder(new SpriteEntityAnimatorContextFactory(defaultShadowUrl).withDefaultOptions({ offsetY: 2, width: 32, height: 32 }).withPixelScale(defaultPixelScale), (e) => new EntityAnimationStateGenerator(e))
+                .glueToAction(ANIM_ACTION_WAIT, (context) => context.animateSprite(Assets.imageAsset("test-s-walk.png"), { frameCount: 1 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH, (context) => context.animateSprite(Assets.imageAsset("test-s-walk.png"), { frameCount: 4 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH, (context) => context.animateSprite(Assets.imageAsset("test-n-walk.png"), { frameCount: 4 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH_EAST, (context) => context.animateSprite(Assets.imageAsset("test-nwne-walk.png"), { frameCount: 4 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, EAST, (context) => context.animateSprite(Assets.imageAsset("test-ew-walk.png"), { frameCount: 4 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH_EAST, (context) => context.animateSprite(Assets.imageAsset("test-swse-walk.png"), { frameCount: 4 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH_WEST, (context) => context.animateSprite(Assets.imageAsset("test-swse-walk.png"), { frameCount: 4, flip: true }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, WEST, (context) => context.animateSprite(Assets.imageAsset("test-ew-walk.png"), { frameCount: 4, flip: true }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH_WEST, (context) => context.animateSprite(Assets.imageAsset("test-nwne-walk.png"), { frameCount: 4, flip: true }))
+                ;
+
+            var sheepAnimator = createAnimationBuilder(new SpriteEntityAnimatorContextFactory(defaultShadowUrl).withDefaultOptions({ offsetY: 2, width: 32, height: 32 }).withPixelScale(defaultPixelScale), (e) => new EntityAnimationStateGenerator(e))
+                .glueToAction(ANIM_ACTION_WAIT, (context) => context.animateSprite(Assets.imageAsset("sheep-s-walk.png"), { frameCount: 1 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH, (context) => context.animateSprite(Assets.imageAsset("sheep-s-walk.png"), { frameCount: 2 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH, (context) => context.animateSprite(Assets.imageAsset("sheep-n-walk.png"), { frameCount: 2 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH_EAST, (context) => context.animateSprite(Assets.imageAsset("sheep-nenw-walk.png"), { frameCount: 2 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, EAST, (context) => context.animateSprite(Assets.imageAsset("sheep-ew-walk.png"), { frameCount: 2, flip: true }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH_EAST, (context) => context.animateSprite(Assets.imageAsset("sheep-sesw-walk.png"), { frameCount: 2, flip: true }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH_WEST, (context) => context.animateSprite(Assets.imageAsset("sheep-sesw-walk.png"), { frameCount: 2 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, WEST, (context) => context.animateSprite(Assets.imageAsset("sheep-ew-walk.png"), { frameCount: 2 }))
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH_WEST, (context) => context.animateSprite(Assets.imageAsset("sheep-nenw-walk.png"), { frameCount: 2, flip: true }))
+                ;
+            var treeType0Animator = createAnimationBuilder(new SpriteEntityAnimatorContextFactory(defaultShadowUrl).withDefaultOptions({ offsetY: 2, width: 64, height: 128 }).withPixelScale(defaultPixelScale), (e) => new EntityAnimationStateGenerator(e))
+                .glueToAction(ANIM_ACTION_WAIT, (context) => context.animateSprite(Assets.imageAsset("tree0.png"), { frameCount: 1 }));
+
+
+            this.playerEntityType = this.addEntityType(new EntityType(0, "player", (e, gc) => this.trackHeight(new PlayerEntityController(e, 0.1)), (scene: any, e: IEntity) => personAnimator.build(scene, e),
+                Traits.buildTrait(EntityTraits.CameraFocusTraitType, () => new EntityTraits.CameraFocusTrait(true))));
+            this.followerEntityType = this.addEntityType(new EntityType(1, "follower", (e, gc) => this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)), (scene: any, e: IEntity) => personAnimator.build(scene, e),
+                Traits.noTraits()));
+            this.sheepEntityType = this.addEntityType(new EntityType(2, "sheep", (e, gc) => this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)), (scene: any, e: IEntity) => sheepAnimator.build(scene, e),
+                Traits.noTraits()));
+            this.treeEntityType = this.addEntityType(new EntityType(3, "tree", (e, gc) => this.trackHeight(new NullEntityController(e)), (scene: any, e: IEntity) => treeType0Animator.build(scene, e),
+                Traits.noTraits()));
+
+        }
+    }
 
     export function setup(container: HTMLElement): IGame {
 
@@ -40,19 +94,20 @@ module Bootstrap {
             tsBuilder.build(r.item0, r.item1);
             terrainGeometryData = r.item0;
             new TerrainDecal(scene, Assets.atlasAsset("atlas-test.png"), new Rect(0, 0, 1, 1), new Rect(-5, -5, 10, 10), (x, z) => terrainGeometryData.getY(x, z));
-        });
+            });
         var gc = new GameContext();
         gc.traits().addTrait(GameTraits.SceneQueryTraitType, new SceneQuery(function (x, z) { return terrainGeometryData ? terrainGeometryData.getY(x, z) : 0.0; }));
+        var entityTypes = new BsEntityTypes(gc);
         var allEntities = new EntityManager(scene, gc);
         gc.traits().addTrait(GameTraits.EntityManagerTraitType, allEntities);
-        allEntities.addEntity(EntityTypes.playerEntityType);
-        allEntities.addEntity(EntityTypes.sheepEntityType).moveTo(10, 0, 0);
+        allEntities.addEntity(entityTypes.playerEntityType, -1);
+        allEntities.addEntity(entityTypes.sheepEntityType, -2).moveTo(10, 0, 0);
 
         for (var i = 0; i < 100; ++i) {
-            allEntities.addEntity(EntityTypes.treeEntityType).moveTo((Math.random() - 0.5) * 200, 0, (Math.random() - 0.5) * 200);
+            allEntities.addEntity(entityTypes.treeEntityType, -3-i).moveTo((Math.random() - 0.5) * 200, 0, (Math.random() - 0.5) * 200);
         }
 
-        var editPos = new THREE.AxisHelper(4 );
+        var editPos = new THREE.AxisHelper(4);
         scene.add(editPos);
 
         var raycaster = new THREE.Raycaster();
@@ -88,6 +143,23 @@ module Bootstrap {
         }, false);
 
         return {
+            processUpdate: (update: NetCode.SharedWorldSyncActions) => {
+                if (update.AddActions) {
+                    for (var i = 0; i < update.AddActions.length; ++i) {
+                        var addAction = update.AddActions[i];
+                        entityTypes.entityTypeById(addAction.NewEntityId).do(et => {
+                            var e = allEntities.addEntity(et, addAction.NewEntityId);
+                            e.state.position = NetCode.IntPoint3d.toVector3d(addAction.Pos);
+                        });
+                    }
+                }
+                if (update.MoveActions) {
+                    for (var i = 0; i < update.MoveActions.length; ++i) {
+                        var moveAction = update.MoveActions[i];
+                        allEntities.entityById(moveAction.EntityId).do(e => e.state.position = NetCode.IntPoint3d.toVector3d(moveAction.Pos));
+                    }
+                }
+            },
             update: () => {
                 allEntities.update();
                 allEntities

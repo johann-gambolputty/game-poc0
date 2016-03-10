@@ -36,8 +36,8 @@ namespace GameLib.World.Shared
             var realBaseline = baseline ?? new SharedWorldFrame(Enumerable.Empty<ISharedEntity>());
             return new SharedWorldSyncActions
             {
-                AddActions = _entities.Values.Where(entity => !baseline.Entities.ContainsKey(entity.Id)).Select(entity => new SharedWorldSyncActionAddEntity { NewEntityId = entity.Id, NewEntityTypeId = entity.TypeId }).ToArray(),
-                MoveActions = _entities.Values.Where(entity => HasMovedFromBaseline(entity, baseline)).Select(entity => new SharedWorldSyncActionMoveEntity { EntityId = entity.Id, Pos = entity.Position }).ToArray()
+                AddActions = _entities.Values.Where(entity => !realBaseline.Entities.ContainsKey(entity.Id)).Select(entity => new SharedWorldSyncActionAddEntity { NewEntityId = entity.Id, NewEntityTypeId = entity.TypeId }).ToArray(),
+                MoveActions = _entities.Values.Where(entity => HasMovedFromBaseline(entity, realBaseline)).Select(entity => new SharedWorldSyncActionMoveEntity { EntityId = entity.Id, Pos = entity.Position }).ToArray()
             };
         }
 

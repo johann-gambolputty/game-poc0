@@ -1,5 +1,50 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var Bootstrap;
 (function (Bootstrap) {
+    var BsEntityTypes = (function (_super) {
+        __extends(BsEntityTypes, _super);
+        function BsEntityTypes(gc) {
+            var _this = this;
+            _super.call(this);
+            this.gc = gc;
+            var defaultShadowUrl = Assets.imageAsset("shadow.png");
+            var defaultPixelScale = 0.1; //  Pixel to world size factor (e.g. 32x32 spite with scale of 0.1 is 3.2m x 3.2m, assuming world units are metres)
+            var personAnimator = createAnimationBuilder(new SpriteEntityAnimatorContextFactory(defaultShadowUrl).withDefaultOptions({ offsetY: 2, width: 32, height: 32 }).withPixelScale(defaultPixelScale), function (e) { return new EntityAnimationStateGenerator(e); })
+                .glueToAction(ANIM_ACTION_WAIT, function (context) { return context.animateSprite(Assets.imageAsset("test-s-walk.png"), { frameCount: 1 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH, function (context) { return context.animateSprite(Assets.imageAsset("test-s-walk.png"), { frameCount: 4 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH, function (context) { return context.animateSprite(Assets.imageAsset("test-n-walk.png"), { frameCount: 4 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH_EAST, function (context) { return context.animateSprite(Assets.imageAsset("test-nwne-walk.png"), { frameCount: 4 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, EAST, function (context) { return context.animateSprite(Assets.imageAsset("test-ew-walk.png"), { frameCount: 4 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH_EAST, function (context) { return context.animateSprite(Assets.imageAsset("test-swse-walk.png"), { frameCount: 4 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH_WEST, function (context) { return context.animateSprite(Assets.imageAsset("test-swse-walk.png"), { frameCount: 4, flip: true }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, WEST, function (context) { return context.animateSprite(Assets.imageAsset("test-ew-walk.png"), { frameCount: 4, flip: true }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH_WEST, function (context) { return context.animateSprite(Assets.imageAsset("test-nwne-walk.png"), { frameCount: 4, flip: true }); });
+            var sheepAnimator = createAnimationBuilder(new SpriteEntityAnimatorContextFactory(defaultShadowUrl).withDefaultOptions({ offsetY: 2, width: 32, height: 32 }).withPixelScale(defaultPixelScale), function (e) { return new EntityAnimationStateGenerator(e); })
+                .glueToAction(ANIM_ACTION_WAIT, function (context) { return context.animateSprite(Assets.imageAsset("sheep-s-walk.png"), { frameCount: 1 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH, function (context) { return context.animateSprite(Assets.imageAsset("sheep-s-walk.png"), { frameCount: 2 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH, function (context) { return context.animateSprite(Assets.imageAsset("sheep-n-walk.png"), { frameCount: 2 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH_EAST, function (context) { return context.animateSprite(Assets.imageAsset("sheep-nenw-walk.png"), { frameCount: 2 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, EAST, function (context) { return context.animateSprite(Assets.imageAsset("sheep-ew-walk.png"), { frameCount: 2, flip: true }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH_EAST, function (context) { return context.animateSprite(Assets.imageAsset("sheep-sesw-walk.png"), { frameCount: 2, flip: true }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, SOUTH_WEST, function (context) { return context.animateSprite(Assets.imageAsset("sheep-sesw-walk.png"), { frameCount: 2 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, WEST, function (context) { return context.animateSprite(Assets.imageAsset("sheep-ew-walk.png"), { frameCount: 2 }); })
+                .glueToActionAndFacing(ANIM_ACTION_WALK, NORTH_WEST, function (context) { return context.animateSprite(Assets.imageAsset("sheep-nenw-walk.png"), { frameCount: 2, flip: true }); });
+            var treeType0Animator = createAnimationBuilder(new SpriteEntityAnimatorContextFactory(defaultShadowUrl).withDefaultOptions({ offsetY: 2, width: 64, height: 128 }).withPixelScale(defaultPixelScale), function (e) { return new EntityAnimationStateGenerator(e); })
+                .glueToAction(ANIM_ACTION_WAIT, function (context) { return context.animateSprite(Assets.imageAsset("tree0.png"), { frameCount: 1 }); });
+            this.playerEntityType = this.addEntityType(new EntityType(0, "player", function (e, gc) { return _this.trackHeight(new PlayerEntityController(e, 0.1)); }, function (scene, e) { return personAnimator.build(scene, e); }, Traits.buildTrait(EntityTraits.CameraFocusTraitType, function () { return new EntityTraits.CameraFocusTrait(true); })));
+            this.followerEntityType = this.addEntityType(new EntityType(1, "follower", function (e, gc) { return _this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)); }, function (scene, e) { return personAnimator.build(scene, e); }, Traits.noTraits()));
+            this.sheepEntityType = this.addEntityType(new EntityType(2, "sheep", function (e, gc) { return _this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)); }, function (scene, e) { return sheepAnimator.build(scene, e); }, Traits.noTraits()));
+            this.treeEntityType = this.addEntityType(new EntityType(3, "tree", function (e, gc) { return _this.trackHeight(new NullEntityController(e)); }, function (scene, e) { return treeType0Animator.build(scene, e); }, Traits.noTraits()));
+        }
+        BsEntityTypes.prototype.trackHeight = function (controller) {
+            return new HeightEntityContoller(controller, this.gc.traits().safeTrait(GameTraits.SceneQueryTraitType).getHeight);
+        };
+        return BsEntityTypes;
+    })(EntityTypes);
     function setup(container) {
         var displayWidth = container.offsetWidth;
         var displayHeight = container.offsetHeight;
@@ -29,12 +74,13 @@ var Bootstrap;
         });
         var gc = new GameContext();
         gc.traits().addTrait(GameTraits.SceneQueryTraitType, new SceneQuery(function (x, z) { return terrainGeometryData ? terrainGeometryData.getY(x, z) : 0.0; }));
+        var entityTypes = new BsEntityTypes(gc);
         var allEntities = new EntityManager(scene, gc);
         gc.traits().addTrait(GameTraits.EntityManagerTraitType, allEntities);
-        allEntities.addEntity(EntityTypes.playerEntityType);
-        allEntities.addEntity(EntityTypes.sheepEntityType).moveTo(10, 0, 0);
+        allEntities.addEntity(entityTypes.playerEntityType, -1);
+        allEntities.addEntity(entityTypes.sheepEntityType, -2).moveTo(10, 0, 0);
         for (var i = 0; i < 100; ++i) {
-            allEntities.addEntity(EntityTypes.treeEntityType).moveTo((Math.random() - 0.5) * 200, 0, (Math.random() - 0.5) * 200);
+            allEntities.addEntity(entityTypes.treeEntityType, -3 - i).moveTo((Math.random() - 0.5) * 200, 0, (Math.random() - 0.5) * 200);
         }
         var editPos = new THREE.AxisHelper(4);
         scene.add(editPos);
@@ -66,6 +112,23 @@ var Bootstrap;
             }
         }, false);
         return {
+            processUpdate: function (update) {
+                if (update.AddActions) {
+                    for (var i = 0; i < update.AddActions.length; ++i) {
+                        var addAction = update.AddActions[i];
+                        entityTypes.entityTypeById(addAction.NewEntityId).do(function (et) {
+                            var e = allEntities.addEntity(et, addAction.NewEntityId);
+                            e.state.position = NetCode.IntPoint3d.toVector3d(addAction.Pos);
+                        });
+                    }
+                }
+                if (update.MoveActions) {
+                    for (var i = 0; i < update.MoveActions.length; ++i) {
+                        var moveAction = update.MoveActions[i];
+                        allEntities.entityById(moveAction.EntityId).do(function (e) { return e.state.position = NetCode.IntPoint3d.toVector3d(moveAction.Pos); });
+                    }
+                }
+            },
             update: function () {
                 allEntities.update();
                 allEntities
@@ -83,4 +146,3 @@ var Bootstrap;
     }
     Bootstrap.setup = setup;
 })(Bootstrap || (Bootstrap = {}));
-//# sourceMappingURL=bootstrap.js.map
