@@ -7,7 +7,7 @@ namespace GameLib.World.Shared
     public interface ISharedEntity
     {
         int Id { get; }
-        IntPoint3d Position { get; }
+        IntVector3d Position { get; }
         int TypeId { get; }
     }
 
@@ -21,7 +21,7 @@ namespace GameLib.World.Shared
 
         public int Id { get; private set; }
 
-        public IntPoint3d Position { get; set; }
+        public IntVector3d Position { get; set; }
 
         public int TypeId
         {

@@ -9,6 +9,7 @@ interface IEntity {
     id: number;
     state: IEntityState;
     moveTo(x: number, y: number, z: number): IEntity;
+    moveToPos(pos: Vector3d): IEntity;
     traits: TraitContainer;
 }
 
@@ -42,6 +43,9 @@ class Entity implements IEntity {
     moveTo(x: number, y: number, z: number): IEntity {
         this.state.position = new Vector3d(x, y, z);
         return this;
+    }
+    moveToPos(pos: Vector3d): IEntity {
+        return this.moveTo(pos.x, pos.y, pos.z);
     }
 }
 

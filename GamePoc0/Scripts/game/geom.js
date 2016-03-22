@@ -61,3 +61,4 @@ var Vector3d = (function () {
     Vector3d.zaxis = new Vector3d(0, 0, 1);
     return Vector3d;
 })();
+//# sourceMappingURL=geom.js.map

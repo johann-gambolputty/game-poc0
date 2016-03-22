@@ -18,6 +18,9 @@ var Entity = (function () {
         this.state.position = new Vector3d(x, y, z);
         return this;
     };
+    Entity.prototype.moveToPos = function (pos) {
+        return this.moveTo(pos.x, pos.y, pos.z);
+    };
     return Entity;
 })();
 var EntityManager = (function () {
@@ -65,3 +68,4 @@ var EntityType = (function () {
     }
     return EntityType;
 })();
+//# sourceMappingURL=entities.js.map

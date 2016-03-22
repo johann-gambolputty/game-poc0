@@ -28,3 +28,4 @@ var NetCode;
     })();
     NetCode.SharedWorldSyncActions = SharedWorldSyncActions;
 })(NetCode || (NetCode = {}));
+//# sourceMappingURL=net.js.map

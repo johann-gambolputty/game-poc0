@@ -50,9 +50,10 @@ module Bootstrap {
 
             this.playerEntityType = this.addEntityType(new EntityType(0, "player", (e, gc) => this.trackHeight(new PlayerEntityController(e, 0.1)), (scene: any, e: IEntity) => personAnimator.build(scene, e),
                 Traits.buildTrait(EntityTraits.CameraFocusTraitType, () => new EntityTraits.CameraFocusTrait(true))));
-            this.followerEntityType = this.addEntityType(new EntityType(1, "follower", (e, gc) => this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)), (scene: any, e: IEntity) => personAnimator.build(scene, e),
+            //this.followerEntityType = this.addEntityType(new EntityType(1, "follower", (e, gc) => this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)), (scene: any, e: IEntity) => personAnimator.build(scene, e),
+            this.followerEntityType = this.addEntityType(new EntityType(1, "follower", (e, gc) => this.trackHeight(new NullEntityController(e)), (scene: any, e: IEntity) => personAnimator.build(scene, e),
                 Traits.noTraits()));
-            this.sheepEntityType = this.addEntityType(new EntityType(2, "sheep", (e, gc) => this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)), (scene: any, e: IEntity) => sheepAnimator.build(scene, e),
+            this.sheepEntityType = this.addEntityType(new EntityType(2, "sheep", (e, gc) => this.trackHeight(new NullEntityController(e)), (scene: any, e: IEntity) => sheepAnimator.build(scene, e),
                 Traits.noTraits()));
             this.treeEntityType = this.addEntityType(new EntityType(3, "tree", (e, gc) => this.trackHeight(new NullEntityController(e)), (scene: any, e: IEntity) => treeType0Animator.build(scene, e),
                 Traits.noTraits()));
@@ -100,8 +101,8 @@ module Bootstrap {
         var entityTypes = new BsEntityTypes(gc);
         var allEntities = new EntityManager(scene, gc);
         gc.traits().addTrait(GameTraits.EntityManagerTraitType, allEntities);
-        allEntities.addEntity(entityTypes.playerEntityType, -1);
-        allEntities.addEntity(entityTypes.sheepEntityType, -2).moveTo(10, 0, 0);
+        //allEntities.addEntity(entityTypes.playerEntityType, -1);
+        //allEntities.addEntity(entityTypes.sheepEntityType, -2).moveTo(10, 0, 0);
 
         for (var i = 0; i < 100; ++i) {
             allEntities.addEntity(entityTypes.treeEntityType, -3-i).moveTo((Math.random() - 0.5) * 200, 0, (Math.random() - 0.5) * 200);
@@ -148,15 +149,14 @@ module Bootstrap {
                     for (var i = 0; i < update.AddActions.length; ++i) {
                         var addAction = update.AddActions[i];
                         entityTypes.entityTypeById(addAction.NewEntityId).do(et => {
-                            var e = allEntities.addEntity(et, addAction.NewEntityId);
-                            e.state.position = NetCode.IntPoint3d.toVector3d(addAction.Pos);
+                            allEntities.addEntity(et, addAction.NewEntityId).moveToPos(NetCode.IntPoint3d.toVector3d(addAction.Pos));
                         });
                     }
                 }
                 if (update.MoveActions) {
                     for (var i = 0; i < update.MoveActions.length; ++i) {
                         var moveAction = update.MoveActions[i];
-                        allEntities.entityById(moveAction.EntityId).do(e => e.state.position = NetCode.IntPoint3d.toVector3d(moveAction.Pos));
+                        allEntities.entityById(moveAction.EntityId).do(e => e.moveToPos(NetCode.IntPoint3d.toVector3d(moveAction.Pos)));
                     }
                 }
             },
@@ -170,6 +170,7 @@ module Bootstrap {
                         camera.lookAt(new THREE.Vector3(pos.x, pos.y, pos.z));
                     });
             },
+
             render: renderer => {
                 renderer.render(scene, camera);
             }

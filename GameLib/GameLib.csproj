@@ -56,9 +56,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Maths\IntPoint3d.cs" />
+    <Compile Include="Maths\Geometry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\Maybe.cs" />
     <Compile Include="World\Entity.cs" />
+    <Compile Include="World\Traits\CommonTraits.cs" />
+    <Compile Include="World\Traits\EntityTrait.cs" />
     <Compile Include="World\EntityType.cs" />
     <Compile Include="World\GameWorld.cs" />
     <Compile Include="World\GameWorldController.cs" />

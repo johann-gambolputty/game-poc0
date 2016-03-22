@@ -1,6 +1,7 @@
 ﻿
 using GameLib.Maths;
 using GameLib.World.Shared;
+using GameLib.World.Traits;
 
 namespace GameLib.World
 {
@@ -10,7 +11,10 @@ namespace GameLib.World
 
         IEntityType EntityType { get; }
 
-        IntPoint3d Pos { get; set; }
+
+        TraitContainer Traits { get; }
+
+        IntVector3d Pos { get; set; }
 
         double Facing { get; set; }
 
@@ -26,6 +30,7 @@ namespace GameLib.World
         {
             Id = id;
             EntityType = entityType;
+            Traits = entityType.DefaultTraits.ToTraitContainer(this);
         }
 
         public IEntityType EntityType
@@ -33,12 +38,14 @@ namespace GameLib.World
             get; private set;
         }
 
+        public TraitContainer Traits { get; private set; }
+
         public int Id
         {
             get; private set;
         }
 
-        public IntPoint3d Pos { get; set; }
+        public IntVector3d Pos { get; set; }
 
         public double Facing { get; set; }
 

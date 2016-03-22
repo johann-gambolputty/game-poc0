@@ -104,3 +104,4 @@ var PlayerEntityController = (function () {
     };
     return PlayerEntityController;
 })();
+//# sourceMappingURL=entityControllers.js.map

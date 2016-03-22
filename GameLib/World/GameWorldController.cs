@@ -13,6 +13,7 @@ namespace GameLib.World
         {
             _world = world;
             _simulator = simulatorFactory(world);
+            _publisher = publisher;
         }
 
         public void Update()

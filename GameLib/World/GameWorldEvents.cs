@@ -19,12 +19,12 @@ namespace GameLib.World
 
     public class GameWorldEventMoveTo : IGameWorldEvent
     {
-        public GameWorldEventMoveTo(IntPoint3d point)
+        public GameWorldEventMoveTo(IntVector3d point)
         {
             Point = point;
         }
 
-        public IntPoint3d Point { get; private set; }
+        public IntVector3d Point { get; private set; }
 
         public void Visit(IGameWorldEventVisitor visitor)
         {

@@ -36,8 +36,9 @@ var Bootstrap;
             var treeType0Animator = createAnimationBuilder(new SpriteEntityAnimatorContextFactory(defaultShadowUrl).withDefaultOptions({ offsetY: 2, width: 64, height: 128 }).withPixelScale(defaultPixelScale), function (e) { return new EntityAnimationStateGenerator(e); })
                 .glueToAction(ANIM_ACTION_WAIT, function (context) { return context.animateSprite(Assets.imageAsset("tree0.png"), { frameCount: 1 }); });
             this.playerEntityType = this.addEntityType(new EntityType(0, "player", function (e, gc) { return _this.trackHeight(new PlayerEntityController(e, 0.1)); }, function (scene, e) { return personAnimator.build(scene, e); }, Traits.buildTrait(EntityTraits.CameraFocusTraitType, function () { return new EntityTraits.CameraFocusTrait(true); })));
-            this.followerEntityType = this.addEntityType(new EntityType(1, "follower", function (e, gc) { return _this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)); }, function (scene, e) { return personAnimator.build(scene, e); }, Traits.noTraits()));
-            this.sheepEntityType = this.addEntityType(new EntityType(2, "sheep", function (e, gc) { return _this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)); }, function (scene, e) { return sheepAnimator.build(scene, e); }, Traits.noTraits()));
+            //this.followerEntityType = this.addEntityType(new EntityType(1, "follower", (e, gc) => this.trackHeight(new FollowerEntityController(e, gc.traits().safeTrait(GameTraits.EntityManagerTraitType), 0.1)), (scene: any, e: IEntity) => personAnimator.build(scene, e),
+            this.followerEntityType = this.addEntityType(new EntityType(1, "follower", function (e, gc) { return _this.trackHeight(new NullEntityController(e)); }, function (scene, e) { return personAnimator.build(scene, e); }, Traits.noTraits()));
+            this.sheepEntityType = this.addEntityType(new EntityType(2, "sheep", function (e, gc) { return _this.trackHeight(new NullEntityController(e)); }, function (scene, e) { return sheepAnimator.build(scene, e); }, Traits.noTraits()));
             this.treeEntityType = this.addEntityType(new EntityType(3, "tree", function (e, gc) { return _this.trackHeight(new NullEntityController(e)); }, function (scene, e) { return treeType0Animator.build(scene, e); }, Traits.noTraits()));
         }
         BsEntityTypes.prototype.trackHeight = function (controller) {
@@ -77,8 +78,8 @@ var Bootstrap;
         var entityTypes = new BsEntityTypes(gc);
         var allEntities = new EntityManager(scene, gc);
         gc.traits().addTrait(GameTraits.EntityManagerTraitType, allEntities);
-        allEntities.addEntity(entityTypes.playerEntityType, -1);
-        allEntities.addEntity(entityTypes.sheepEntityType, -2).moveTo(10, 0, 0);
+        //allEntities.addEntity(entityTypes.playerEntityType, -1);
+        //allEntities.addEntity(entityTypes.sheepEntityType, -2).moveTo(10, 0, 0);
         for (var i = 0; i < 100; ++i) {
             allEntities.addEntity(entityTypes.treeEntityType, -3 - i).moveTo((Math.random() - 0.5) * 200, 0, (Math.random() - 0.5) * 200);
         }
@@ -117,15 +118,14 @@ var Bootstrap;
                     for (var i = 0; i < update.AddActions.length; ++i) {
                         var addAction = update.AddActions[i];
                         entityTypes.entityTypeById(addAction.NewEntityId).do(function (et) {
-                            var e = allEntities.addEntity(et, addAction.NewEntityId);
-                            e.state.position = NetCode.IntPoint3d.toVector3d(addAction.Pos);
+                            allEntities.addEntity(et, addAction.NewEntityId).moveToPos(NetCode.IntPoint3d.toVector3d(addAction.Pos));
                         });
                     }
                 }
                 if (update.MoveActions) {
                     for (var i = 0; i < update.MoveActions.length; ++i) {
                         var moveAction = update.MoveActions[i];
-                        allEntities.entityById(moveAction.EntityId).do(function (e) { return e.state.position = NetCode.IntPoint3d.toVector3d(moveAction.Pos); });
+                        allEntities.entityById(moveAction.EntityId).do(function (e) { return e.moveToPos(NetCode.IntPoint3d.toVector3d(moveAction.Pos)); });
                     }
                 }
             },
@@ -146,3 +146,4 @@ var Bootstrap;
     }
     Bootstrap.setup = setup;
 })(Bootstrap || (Bootstrap = {}));
+//# sourceMappingURL=bootstrap.js.map

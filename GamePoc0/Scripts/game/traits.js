@@ -118,3 +118,4 @@ var TraitContainer = (function () {
     };
     return TraitContainer;
 })();
+//# sourceMappingURL=traits.js.map

@@ -17,3 +17,4 @@ var EntityTraits;
     EntityTraits.FollowerTrait = FollowerTrait;
     EntityTraits.FollowerTraitType = new TraitType("followerTrait");
 })(EntityTraits || (EntityTraits = {}));
+//# sourceMappingURL=entityTraits.js.map

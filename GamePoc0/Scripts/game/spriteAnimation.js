@@ -250,3 +250,4 @@ var ShaderSpriteEntityAnimator = (function (_super) {
     };
     return ShaderSpriteEntityAnimator;
 })(AbstractSpriteEntityAnimator);
+//# sourceMappingURL=spriteAnimation.js.map
