@@ -68,4 +68,3 @@ var EntityType = (function () {
     }
     return EntityType;
 })();
-//# sourceMappingURL=entities.js.map

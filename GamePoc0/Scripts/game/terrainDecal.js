@@ -58,4 +58,3 @@ var TerrainDecal = (function () {
     }
     return TerrainDecal;
 })();
-//# sourceMappingURL=terrainDecal.js.map

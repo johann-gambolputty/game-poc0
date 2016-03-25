@@ -75,6 +75,44 @@ var FollowerEntityController = (function () {
     };
     return FollowerEntityController;
 })();
+var RemotePlayerEntityController = (function () {
+    function RemotePlayerEntityController(e, moveSpeed, gs) {
+        this.e = e;
+        this.moveSpeed = moveSpeed;
+        this.gs = gs;
+    }
+    RemotePlayerEntityController.prototype.createNextState = function () {
+        //  N: 1, S: 2, E: 4, W: 8
+        var cd = 0;
+        var newPos = this.e.state.position;
+        if (keyStates.isCharDown("W")) {
+            newPos = newPos.sub(Vector3d.zaxis.mul(this.moveSpeed));
+            cd = 1;
+        }
+        else if (keyStates.isCharDown("S")) {
+            newPos = newPos.add(Vector3d.zaxis.mul(this.moveSpeed));
+            cd = 2;
+        }
+        if (keyStates.isCharDown("D")) {
+            newPos = newPos.add(Vector3d.xaxis.mul(this.moveSpeed));
+            cd += 4;
+        }
+        else if (keyStates.isCharDown("A")) {
+            newPos = newPos.sub(Vector3d.xaxis.mul(this.moveSpeed));
+            cd += 8;
+        }
+        var actions = new NetCode.SharedWorldSyncActions();
+        actions.ScaleFactor = 1000;
+        var moveAction = new NetCode.SharedWorldSyncActionMoveEntity();
+        moveAction.EntityId = 0;
+        moveAction.Facing = 0;
+        moveAction.Pos = NetCode.IntPoint3d.fromVector3d(newPos);
+        actions.MoveActions = [moveAction];
+        this.gs.sendUpdate(actions);
+        return this.e.state.changePositionAndFacing(newPos, dirBitsToFacing(cd));
+    };
+    return RemotePlayerEntityController;
+})();
 var PlayerEntityController = (function () {
     function PlayerEntityController(e, moveSpeed) {
         this.e = e;
@@ -104,4 +142,3 @@ var PlayerEntityController = (function () {
     };
     return PlayerEntityController;
 })();
-//# sourceMappingURL=entityControllers.js.map

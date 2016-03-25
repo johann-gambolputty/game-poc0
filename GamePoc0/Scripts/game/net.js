@@ -3,8 +3,15 @@ var NetCode;
     var IntPoint3d = (function () {
         function IntPoint3d() {
         }
-        IntPoint3d.toVector3d = function (pt) {
-            return new Vector3d(pt.X, pt.Y, pt.Z);
+        IntPoint3d.fromVector3d = function (pt, sf) {
+            var ip = new IntPoint3d();
+            ip.X = pt.x * sf;
+            ip.Y = pt.y * sf;
+            ip.Z = pt.z * sf;
+            return ip;
+        };
+        IntPoint3d.toVector3d = function (pt, sf) {
+            return new Vector3d(pt.X / sf, pt.Y / sf, pt.Z / sf);
         };
         return IntPoint3d;
     })();
@@ -28,4 +35,3 @@ var NetCode;
     })();
     NetCode.SharedWorldSyncActions = SharedWorldSyncActions;
 })(NetCode || (NetCode = {}));
-//# sourceMappingURL=net.js.map

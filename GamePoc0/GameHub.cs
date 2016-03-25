@@ -1,5 +1,6 @@
 ﻿using GameLib.Maths;
 using GameLib.World;
+using GameLib.World.Shared;
 using GameLib.World.Traits;
 using GamePoc0.Game;
 using Microsoft.AspNet.SignalR;
@@ -21,15 +22,21 @@ namespace GamePoc0
             var followerType = new EntityType(1).WithTrait(e => new FlockingTrait(e));
 
             _world = new GameWorld();
-            _world.AddEntity(new Entity(0, playerType) { Pos = new IntVector3d(20, 0, 20) });
-            _world.AddEntity(new Entity(1, followerType) { Pos = new IntVector3d(30, 0, 20) });
-            _world.AddEntity(new Entity(2, followerType) { Pos = new IntVector3d(40, 0, 20) });
+            _world.AddEntity(new Entity(0, playerType) { Pos = _world.ToIntVector3d(new Vector3d(20, 0, 20)) });
+            _world.AddEntity(new Entity(1, followerType) { Pos = _world.ToIntVector3d(new Vector3d(30, 0, 20)) });
+            _world.AddEntity(new Entity(2, followerType) { Pos = _world.ToIntVector3d(new Vector3d(40, 0, 20)) });
             _publisher = new GameHubPublisher(this);
 
             Observable.Timer(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(50)).Subscribe(_ => {
-                _world.Update();
+                //  TODO: Use input parameter to determine time since last update?
+                _world.Update(50);
                 _publisher.Publish(_world);
             });
+        }
+
+        public void HandleUserAction(ISharedWorldSyncAction action)
+        {
+            Console.WriteLine(action);
         }
 
         public void Send(string name, string message)

@@ -65,4 +65,3 @@ var TerrainBufferGeometry;
     }
     TerrainBufferGeometry.build = build;
 })(TerrainBufferGeometry || (TerrainBufferGeometry = {}));
-//# sourceMappingURL=terrainBufferGeometry.js.map

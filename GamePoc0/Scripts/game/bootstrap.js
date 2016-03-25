@@ -74,6 +74,7 @@ var Bootstrap;
             new TerrainDecal(scene, Assets.atlasAsset("atlas-test.png"), new Rect(0, 0, 1, 1), new Rect(-5, -5, 10, 10), function (x, z) { return terrainGeometryData.getY(x, z); });
         });
         var gc = new GameContext();
+        gc.traits().addTrait();
         gc.traits().addTrait(GameTraits.SceneQueryTraitType, new SceneQuery(function (x, z) { return terrainGeometryData ? terrainGeometryData.getY(x, z) : 0.0; }));
         var entityTypes = new BsEntityTypes(gc);
         var allEntities = new EntityManager(scene, gc);
@@ -118,14 +119,14 @@ var Bootstrap;
                     for (var i = 0; i < update.AddActions.length; ++i) {
                         var addAction = update.AddActions[i];
                         entityTypes.entityTypeById(addAction.NewEntityId).do(function (et) {
-                            allEntities.addEntity(et, addAction.NewEntityId).moveToPos(NetCode.IntPoint3d.toVector3d(addAction.Pos));
+                            allEntities.addEntity(et, addAction.NewEntityId).moveToPos(NetCode.IntPoint3d.toVector3d(addAction.Pos, update.ScaleFactor));
                         });
                     }
                 }
                 if (update.MoveActions) {
                     for (var i = 0; i < update.MoveActions.length; ++i) {
                         var moveAction = update.MoveActions[i];
-                        allEntities.entityById(moveAction.EntityId).do(function (e) { return e.moveToPos(NetCode.IntPoint3d.toVector3d(moveAction.Pos)); });
+                        allEntities.entityById(moveAction.EntityId).do(function (e) { return e.moveToPos(NetCode.IntPoint3d.toVector3d(moveAction.Pos, update.ScaleFactor)); });
                     }
                 }
             },
@@ -146,4 +147,3 @@ var Bootstrap;
     }
     Bootstrap.setup = setup;
 })(Bootstrap || (Bootstrap = {}));
-//# sourceMappingURL=bootstrap.js.map

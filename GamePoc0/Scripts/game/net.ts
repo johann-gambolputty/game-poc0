@@ -6,8 +6,16 @@ module NetCode {
         Y: number;
         Z: number;
 
-        static toVector3d(pt: IntPoint3d): Vector3d {
-            return new Vector3d(pt.X, pt.Y, pt.Z);
+        static fromVector3d(pt: Vector3d, sf: number): IntPoint3d {
+            var ip = new IntPoint3d();
+            ip.X = pt.x * sf;
+            ip.Y = pt.y * sf;
+            ip.Z = pt.z * sf;
+            return ip;
+        }
+
+        static toVector3d(pt: IntPoint3d, sf: number): Vector3d {
+            return new Vector3d(pt.X / sf, pt.Y / sf, pt.Z / sf);
         }
     }
 
@@ -25,6 +33,7 @@ module NetCode {
     }
 
     export class SharedWorldSyncActions {
+        ScaleFactor: number;
         AddActions: SharedWorldSyncActionAddEntity[];
         MoveActions: SharedWorldSyncActionMoveEntity[];
     }

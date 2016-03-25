@@ -104,4 +104,3 @@ function canvasImage(canvas, img, w, h) {
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     return ctx;
 }
-//# sourceMappingURL=utils.js.map

@@ -4,4 +4,3 @@ var SceneQuery = (function () {
     }
     return SceneQuery;
 })();
-//# sourceMappingURL=sceneQuery.js.map

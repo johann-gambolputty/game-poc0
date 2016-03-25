@@ -6,14 +6,14 @@ function vecToFacing(x: number, y: number): number {
 
 function dirBitsToFacing(cd: number): number {
     switch (cd) {
-        case 1: return NORTH;   // N
-        case 2: return SOUTH;   // S
-        case 4: return EAST;   // E
-        case 5: return NORTH_EAST;   // NE
-        case 6: return SOUTH_EAST;   // SE
-        case 8: return WEST;   // W
-        case 9: return NORTH_WEST;   // NW
-        case 10: return SOUTH_WEST;  // SW
+        case 1: return NORTH;       // N
+        case 2: return SOUTH;       // S
+        case 4: return EAST;        // E
+        case 5: return NORTH_EAST;  // NE
+        case 6: return SOUTH_EAST;  // SE
+        case 8: return WEST;        // W
+        case 9: return NORTH_WEST;  // NW
+        case 10: return SOUTH_WEST; // SW
     }
     return SOUTH;
 }
@@ -71,6 +71,41 @@ class FollowerEntityController implements IEntityController {
         //playerVec.multiplyScalar(Math.min(rmoveProperties.speed, distToPlayer);
         var step = playerNorm.mul(Math.min(this.speed, distToPlayer - 3.0));
         return this.e.state.changePositionAndFacing(this.e.state.position.add(step), angleToFacing(facing % 8));
+    }
+}
+
+class RemotePlayerEntityController implements IEntityController {
+    constructor(private e: IEntity, private moveSpeed: number, private gs: IGame) {
+    }
+    createNextState(): IEntityState {
+        //  N: 1, S: 2, E: 4, W: 8
+        var cd = 0;
+        var newPos = this.e.state.position;
+        if (keyStates.isCharDown("W")) {
+            newPos = newPos.sub(Vector3d.zaxis.mul(this.moveSpeed));
+            cd = 1;
+        }
+        else if (keyStates.isCharDown("S")) {
+            newPos = newPos.add(Vector3d.zaxis.mul(this.moveSpeed));
+            cd = 2;
+        }
+        if (keyStates.isCharDown("D")) {
+            newPos = newPos.add(Vector3d.xaxis.mul(this.moveSpeed));
+            cd += 4;
+        }
+        else if (keyStates.isCharDown("A")) {
+            newPos = newPos.sub(Vector3d.xaxis.mul(this.moveSpeed));
+            cd += 8;
+        }
+        var actions = new NetCode.SharedWorldSyncActions();
+        actions.ScaleFactor = 1000;
+        var moveAction = new NetCode.SharedWorldSyncActionMoveEntity();
+        moveAction.EntityId = 0;
+        moveAction.Facing = 0;
+        moveAction.Pos = NetCode.IntPoint3d.fromVector3d(newPos);
+        actions.MoveActions = [moveAction];
+        this.gs.sendUpdate(actions);
+        return this.e.state.changePositionAndFacing(newPos, dirBitsToFacing(cd));
     }
 }
 

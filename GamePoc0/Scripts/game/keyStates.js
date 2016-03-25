@@ -31,4 +31,3 @@ document.onkeyup = function (e) {
     //var realEvent = e ? e : window.event;
     keyStates.setKeyUp(e.keyCode);
 };
-//# sourceMappingURL=keyStates.js.map

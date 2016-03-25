@@ -30,4 +30,3 @@ var Assets;
     }
     Assets.loadImageDeferred = loadImageDeferred;
 })(Assets || (Assets = {}));
-//# sourceMappingURL=assets.js.map

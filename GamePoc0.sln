@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLib", "GameLib\GameLib.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TileAtlas", "TileAtlas\TileAtlas.csproj", "{323FBC6F-7E6C-4219-9CF0-173D251922EC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLib.Tests", "GameLib.Tests\GameLib.Tests.csproj", "{0BDDA03C-B331-4C2F-8CA4-02079CC9A9A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{323FBC6F-7E6C-4219-9CF0-173D251922EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{323FBC6F-7E6C-4219-9CF0-173D251922EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{323FBC6F-7E6C-4219-9CF0-173D251922EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BDDA03C-B331-4C2F-8CA4-02079CC9A9A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BDDA03C-B331-4C2F-8CA4-02079CC9A9A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BDDA03C-B331-4C2F-8CA4-02079CC9A9A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BDDA03C-B331-4C2F-8CA4-02079CC9A9A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

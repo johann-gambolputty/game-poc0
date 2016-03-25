@@ -16,13 +16,13 @@ namespace GameLib.World
 
     public class InSphereSpatialQuery : ISpatialQuery
     {
-        public InSphereSpatialQuery(IntVector3d centre, float radius)
+        public InSphereSpatialQuery(IntVector3d centre, int radius)
         {
             Centre = centre;
             RadiusSqr = radius * radius;
         }
         public IntVector3d Centre { get; private set; }
-        public float RadiusSqr { get; private set; }
+        public int RadiusSqr { get; private set; }
 
         public T Visit<T>(ISpatialQueryVisitor<T> visitor)
         {
@@ -39,6 +39,24 @@ namespace GameLib.World
     public class GameWorld
     {
         private readonly Dictionary<int, IEntity> _entities = new Dictionary<int, IEntity>();
+        private const int EntityUnitScaleFactor = 1000;
+
+        public int ToIntSpace(int v)
+        {
+            return v * EntityUnitScaleFactor;
+        }
+
+        private const float InvEntityUnitScaleFactor = 1.0f / EntityUnitScaleFactor;
+
+        public IntVector3d ToIntVector3d(Vector3d vec)
+        {
+            return vec.ToIntVector3d(EntityUnitScaleFactor);
+        }
+
+        public Vector3d ToVector3d(IntVector3d vec)
+        {
+            return vec.ToVector3d(InvEntityUnitScaleFactor);
+        }
 
         private class EntitySpatialQueryVisitor : ISpatialQueryVisitor<IEnumerable<IEntity>>
         {
@@ -75,18 +93,19 @@ namespace GameLib.World
         {
             _entities.Remove(id);
         }
-
-        public void Update()
+        
+        public void Update(float timeSinceLastUpdateMs)
         {
+
             foreach (var trait in _entities.Values.SelectMany(entity => entity.Traits.AllTraitsOfType<IUpdatingTrait>()))
             {
-                trait.Update(this);
+                trait.Update(this, timeSinceLastUpdateMs);
             }
         }
 
         public ISharedWorldFrame TakeSharedSnapshot()
         {
-            return new SharedWorldFrame(_entities.Values.Select(entity => entity.ToShared()));
+            return new SharedWorldFrame(_entities.Values.Select(entity => entity.ToShared()), (int)EntityUnitScaleFactor);
         }
 
     }
